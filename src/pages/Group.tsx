@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import {
   CheckCircle,
   XCircle,
   Crown,
+  UserPlus,
+  Eye,
 } from "lucide-react";
 
 // Mock data - will be replaced with Supabase data
@@ -41,6 +43,7 @@ const mockPendingRequests = [
 
 const Group = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(mockPendingRequests);
@@ -147,6 +150,18 @@ const Group = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Profile Actions */}
+        <div className="flex flex-wrap gap-3 mb-8 animate-fade-in" style={{ animationDelay: "0.05s" }}>
+          <Button onClick={() => navigate(`/grupo/${id}/crear-perfil`)} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Crear mi perfil
+          </Button>
+          <Button variant="outline" onClick={() => navigate(`/grupo/${id}/perfiles`)} className="gap-2">
+            <Eye className="h-4 w-4" />
+            Ver perfiles
+          </Button>
+        </div>
 
         {/* Tabs */}
         <Tabs defaultValue="members" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
