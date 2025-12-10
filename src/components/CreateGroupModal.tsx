@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useGroups } from "@/hooks/useGroups";
 import { Loader2, Copy, Check, Gift } from "lucide-react";
 import { generateGroupCode } from "@/lib/generateCode";
 
@@ -20,16 +22,20 @@ interface CreateGroupModalProps {
 
 const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { createGroup } = useGroups();
+
   const [step, setStep] = useState<"form" | "success">("form");
   const [isLoading, setIsLoading] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
+  const [createdGroupId, setCreatedGroupId] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (groupName.trim().length < 3) {
       setError("O nome do grupo deve ter no mínimo 3 caracteres.");
       return;
@@ -38,15 +44,30 @@ const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
     setIsLoading(true);
     setError("");
 
-    // Generate unique code
+    // Gerar código único
     const code = generateGroupCode();
-    
-    // TODO: Implement with Supabase - create group and assign owner
-    setTimeout(() => {
-      setIsLoading(false);
+
+    // Criar grupo no Supabase
+    const result = await createGroup(groupName.trim(), code);
+
+    if (result.success) {
       setGeneratedCode(code);
+      setCreatedGroupId(result.groupId || "");
       setStep("success");
-    }, 1000);
+      toast({
+        title: "Grupo criado! 🎉",
+        description: "Compartilhe o código com seus amigos.",
+      });
+    } else {
+      setError(result.error || "Erro ao criar grupo.");
+      toast({
+        title: "Erro ao criar grupo",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
   };
 
   const handleCopyCode = async () => {
@@ -67,6 +88,21 @@ const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
     }
   };
 
+  const handleGoToGroup = () => {
+    onOpenChange(false);
+    if (createdGroupId) {
+      navigate(`/grupo/${createdGroupId}`);
+    }
+    // Reset state after animation
+    setTimeout(() => {
+      setStep("form");
+      setGroupName("");
+      setGeneratedCode("");
+      setCreatedGroupId("");
+      setError("");
+    }, 200);
+  };
+
   const handleClose = () => {
     onOpenChange(false);
     // Reset state after animation
@@ -74,6 +110,7 @@ const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
       setStep("form");
       setGroupName("");
       setGeneratedCode("");
+      setCreatedGroupId("");
       setError("");
     }, 200);
   };
@@ -148,8 +185,8 @@ const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
                   </Button>
                 </div>
               </div>
-              <Button className="w-full" onClick={handleClose}>
-                Ir para o Dashboard
+              <Button className="w-full" onClick={handleGoToGroup}>
+                Ir para o Grupo
               </Button>
             </div>
           </>
