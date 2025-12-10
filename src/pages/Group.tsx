@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AppLayout } from "@/components/layout";
 import { useToast } from "@/hooks/use-toast";
 import {
   Gift,
@@ -124,26 +125,9 @@ const Group = () => {
   const hintsGeneratedCount = mockMembers.filter(m => m.hintsGenerated).length;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="icon" className="btn-hover-scale">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Gift className="h-6 w-6 text-primary" />
-              <span className="font-display font-bold text-lg">{mockGroup.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <AppLayout>
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-20 lg:pt-8">
         {/* Group Info Card */}
         <Card className="mb-8 animate-fade-in overflow-hidden">
           <CardContent className="pt-6">
@@ -367,8 +351,8 @@ const Group = () => {
             </TabsContent>
           )}
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 

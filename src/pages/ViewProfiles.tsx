@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { AppLayout } from '@/components/layout';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { ProfileCard } from '@/components/ProfileCard';
 import { useProfiles } from '@/hooks/useProfiles';
@@ -11,33 +12,37 @@ export default function ViewProfiles() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-destructive">{error}</p>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <AppLayout>
+      <div className="max-w-4xl mx-auto px-4 py-8 pt-20 lg:pt-8">
         <Button
           variant="ghost"
           onClick={() => navigate(`/grupo/${groupId}`)}
-          className="mb-6 gap-2"
+          className="mb-6 gap-2 btn-hover-scale"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar ao grupo
         </Button>
 
-        <h1 className="text-2xl font-bold mb-6">Perfis do grupo</h1>
+        <h1 className="font-display text-2xl font-bold mb-6">Perfis do grupo</h1>
 
         {profiles.length === 0 ? (
           <div className="text-center py-12">
@@ -53,6 +58,6 @@ export default function ViewProfiles() {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 }
