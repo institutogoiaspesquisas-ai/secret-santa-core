@@ -8,6 +8,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Group from "./pages/Group";
 import JoinGroup from "./pages/JoinGroup";
+import CreateProfile from "./pages/CreateProfile";
+import ViewProfiles from "./pages/ViewProfiles";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/grupo/:id" element={<Group />} />
+          <Route path="/grupo/:groupId/crear-perfil" element={<CreateProfile />} />
+          <Route path="/grupo/:groupId/perfiles" element={<ViewProfiles />} />
           <Route path="/entrar-grupo" element={<JoinGroup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
