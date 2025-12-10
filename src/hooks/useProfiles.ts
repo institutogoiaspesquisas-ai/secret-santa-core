@@ -10,7 +10,7 @@ export function useProfiles(groupId: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProfiles();
+    if (groupId) fetchProfiles();
   }, [groupId]);
 
   const fetchProfiles = async () => {
@@ -22,13 +22,7 @@ export function useProfiles(groupId: string) {
       // Fetch all complete profiles in the group
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('group_id', groupId)
         .eq('is_complete', true);
 
@@ -37,21 +31,45 @@ export function useProfiles(groupId: string) {
       // Fetch my profile (even if incomplete)
       const { data: myProfileData, error: myProfileError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('group_id', groupId)
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (myProfileError) throw myProfileError;
 
-      setProfiles(profilesData || []);
-      setMyProfile(myProfileData);
+      // Fetch user profiles for all profile user_ids
+      const userIds = [...new Set([
+        ...(profilesData?.map(p => p.user_id) || []),
+        ...(myProfileData ? [myProfileData.user_id] : [])
+      ])];
+
+      const { data: userProfilesData } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      const userProfilesMap = new Map(
+        userProfilesData?.map(up => [up.id, up]) || []
+      );
+
+      // Merge profiles with user data
+      const enrichedProfiles: ProfileWithUser[] = (profilesData || []).map(p => ({
+        ...p,
+        answers: p.answers as ProfileAnswers,
+        validation_status: p.validation_status as 'pending' | 'approved' | 'rejected',
+        user_profiles: userProfilesMap.get(p.user_id) || undefined
+      }));
+
+      const enrichedMyProfile: ProfileWithUser | null = myProfileData ? {
+        ...myProfileData,
+        answers: myProfileData.answers as ProfileAnswers,
+        validation_status: myProfileData.validation_status as 'pending' | 'approved' | 'rejected',
+        user_profiles: userProfilesMap.get(myProfileData.user_id) || undefined
+      } : null;
+
+      setProfiles(enrichedProfiles);
+      setMyProfile(enrichedMyProfile);
     } catch (err) {
       console.error('Error fetching profiles:', err);
       setError(err instanceof Error ? err.message : 'Error loading profiles');
