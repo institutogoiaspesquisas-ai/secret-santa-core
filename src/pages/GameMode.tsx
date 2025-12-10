@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Play, Shuffle, Eye, Check, Sparkles, Loader2, Trophy } from 'lucide-react';
+import { ArrowLeft, Play, Shuffle, Eye, Check, Sparkles, Loader2, Trophy, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useGameMode } from '@/hooks/useGameMode';
 import { ConfettiEffect } from '@/components/game/ConfettiEffect';
@@ -12,6 +12,7 @@ import { HintCard } from '@/components/game/HintCard';
 import { GameFeedback } from '@/components/game/GameFeedback';
 import { PlayerReveal } from '@/components/game/PlayerReveal';
 import { GameSidebar } from '@/components/game/GameSidebar';
+import { ReactionsAdminPanel } from '@/components/game/ReactionsAdminPanel';
 
 interface GroupMember {
     id: string;
@@ -32,6 +33,7 @@ export default function GameMode() {
     const [selectedGuess, setSelectedGuess] = useState<string>('');
     const [awaitingReveal, setAwaitingReveal] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
+    const [showReactionsPanel, setShowReactionsPanel] = useState(false);
 
     const {
         status,
@@ -214,6 +216,17 @@ export default function GameMode() {
                             {status.revealedCount} / {status.totalPlayers} revelados
                         </div>
                     )}
+
+                    {/* Admin button */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowReactionsPanel(true)}
+                        className="text-white/60 hover:text-white hover:bg-white/10 btn-hover-scale"
+                        title="Gerenciar frases"
+                    >
+                        <Settings className="h-5 w-5" />
+                    </Button>
                 </div>
             </header>
 
@@ -430,6 +443,12 @@ export default function GameMode() {
                     )}
                 </div>
             </main>
+
+            {/* Reactions Admin Panel */}
+            <ReactionsAdminPanel
+                isOpen={showReactionsPanel}
+                onClose={() => setShowReactionsPanel(false)}
+            />
         </div>
     );
 }
