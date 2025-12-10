@@ -55,36 +55,31 @@ export function useGroup(groupId: string) {
                 isOwner: groupData.owner_id === user.id,
             });
 
-            // Buscar membros do grupo com perfis de usuário
+            // Buscar membros do grupo
             const { data: membersData, error: membersError } = await supabase
                 .from('group_members')
-                .select(`
-          id,
-          user_id,
-          role,
-          status,
-          created_at,
-          user_profiles (
-            id,
-            full_name,
-            email
-          )
-        `)
+                .select('id, user_id, role, status, created_at')
                 .eq('group_id', groupId);
 
             if (membersError) throw membersError;
 
-            // Buscar perfis de cada membro
+            // Buscar perfis de usuário e perfis de jogo para cada membro
             const membersWithProfiles = await Promise.all(
                 (membersData || []).map(async (member) => {
+                    // Buscar user_profile
+                    const { data: userProfile } = await supabase
+                        .from('user_profiles')
+                        .select('id, full_name, email')
+                        .eq('id', member.user_id)
+                        .maybeSingle();
+
+                    // Buscar profile do jogo
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('is_complete, hints_generated')
                         .eq('group_id', groupId)
                         .eq('user_id', member.user_id)
                         .maybeSingle();
-
-                    const userProfile = member.user_profiles as { full_name: string | null; email: string | null } | null;
 
                     return {
                         id: member.id,
