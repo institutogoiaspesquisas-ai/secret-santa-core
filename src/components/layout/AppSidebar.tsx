@@ -35,7 +35,8 @@ export function AppSidebar({ className }: AppSidebarProps) {
                 title: "Até logo! 👋",
                 description: "Você saiu da sua conta.",
             });
-            navigate("/");
+            // Force full page reload to clear all state
+            window.location.href = "/";
         } catch {
             toast({
                 title: "Erro ao sair",

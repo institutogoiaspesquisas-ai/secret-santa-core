@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout";
+import { useGroups, type GroupWithDetails } from "@/hooks/useGroups";
 import {
   Gift,
   Plus,
@@ -13,52 +14,18 @@ import {
   CheckCircle2,
   AlertCircle,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "@/components/CreateGroupModal";
 import JoinGroupModal from "@/components/JoinGroupModal";
 
-// Mock data - will be replaced with Supabase data
-const mockGroups = [
-  {
-    id: "1",
-    name: "Família Galvão",
-    code: "A9F2KQ",
-    role: "owner" as const,
-    status: "approved" as const,
-    profileStatus: "complete" as const,
-    hintsGenerated: true,
-    memberCount: 5,
-    pendingCount: 2,
-  },
-  {
-    id: "2",
-    name: "Amigos do Trabalho",
-    code: "B3H7LP",
-    role: "member" as const,
-    status: "approved" as const,
-    profileStatus: "incomplete" as const,
-    hintsGenerated: false,
-    memberCount: 8,
-    pendingCount: 0,
-  },
-  {
-    id: "3",
-    name: "Grupo da Faculdade",
-    code: "C5J9MR",
-    role: "member" as const,
-    status: "pending" as const,
-    profileStatus: "none" as const,
-    hintsGenerated: false,
-    memberCount: 12,
-    pendingCount: 0,
-  },
-];
-
 const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { groups, loading, error, refetch } = useGroups();
+
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -81,7 +48,7 @@ const Dashboard = () => {
     }
   };
 
-  const getStatusBadge = (group: typeof mockGroups[0]) => {
+  const getStatusBadge = (group: GroupWithDetails) => {
     if (group.status === "pending") {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium badge-pending">
@@ -100,7 +67,7 @@ const Dashboard = () => {
       );
     }
 
-    if (group.profileStatus === "complete") {
+    if (group.profileComplete) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium badge-complete">
           <CheckCircle2 className="h-3 w-3" />
@@ -116,6 +83,43 @@ const Dashboard = () => {
       </span>
     );
   };
+
+  const handleCreateModalClose = (open: boolean) => {
+    setIsCreateModalOpen(open);
+    if (!open) {
+      // Refetch groups when modal closes
+      refetch();
+    }
+  };
+
+  const handleJoinModalClose = (open: boolean) => {
+    setIsJoinModalOpen(open);
+    if (!open) {
+      // Refetch groups when modal closes
+      refetch();
+    }
+  };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto px-4 py-8 pt-20 lg:pt-8 text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={refetch}>Tentar novamente</Button>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -149,7 +153,7 @@ const Dashboard = () => {
         </div>
 
         {/* Groups Grid */}
-        {mockGroups.length === 0 ? (
+        {groups.length === 0 ? (
           <Card className="border-dashed border-2">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
@@ -173,7 +177,7 @@ const Dashboard = () => {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {mockGroups.map((group, index) => (
+            {groups.map((group, index) => (
               <Card
                 key={group.id}
                 className="group relative overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 card-hover-shadow animate-fade-in"
@@ -259,11 +263,11 @@ const Dashboard = () => {
       {/* Modals */}
       <CreateGroupModal
         open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
+        onOpenChange={handleCreateModalClose}
       />
       <JoinGroupModal
         open={isJoinModalOpen}
-        onOpenChange={setIsJoinModalOpen}
+        onOpenChange={handleJoinModalClose}
       />
     </AppLayout>
   );

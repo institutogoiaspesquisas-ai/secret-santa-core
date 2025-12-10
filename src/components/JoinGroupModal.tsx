@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useGroups } from "@/hooks/useGroups";
 import { Loader2, Users } from "lucide-react";
 import { isValidGroupCode } from "@/lib/generateCode";
 
@@ -20,6 +21,8 @@ interface JoinGroupModalProps {
 
 const JoinGroupModal = ({ open, onOpenChange }: JoinGroupModalProps) => {
   const { toast } = useToast();
+  const { joinGroup } = useGroups();
+
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -32,7 +35,7 @@ const JoinGroupModal = ({ open, onOpenChange }: JoinGroupModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isValidGroupCode(code)) {
       setError("Código inválido. O código deve ter 6 caracteres.");
       return;
@@ -41,15 +44,25 @@ const JoinGroupModal = ({ open, onOpenChange }: JoinGroupModalProps) => {
     setIsLoading(true);
     setError("");
 
-    // TODO: Implement with Supabase - check if group exists and create pending request
-    setTimeout(() => {
-      setIsLoading(false);
+    // Solicitar entrada no grupo via Supabase
+    const result = await joinGroup(code);
+
+    if (result.success) {
       toast({
         title: "Solicitação enviada! ✉️",
         description: "Sua solicitação foi enviada ao administrador do grupo. Aguarde aprovação.",
       });
       handleClose();
-    }, 1500);
+    } else {
+      setError(result.error || "Erro ao solicitar entrada.");
+      toast({
+        title: "Erro",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
   };
 
   const handleClose = () => {
@@ -84,9 +97,8 @@ const JoinGroupModal = ({ open, onOpenChange }: JoinGroupModalProps) => {
               placeholder="Ex: A9F2KQ"
               value={code}
               onChange={handleCodeChange}
-              className={`text-center font-mono text-2xl tracking-[0.5em] uppercase ${
-                error ? "border-destructive" : ""
-              }`}
+              className={`text-center font-mono text-2xl tracking-[0.5em] uppercase ${error ? "border-destructive" : ""
+                }`}
               maxLength={6}
             />
             {error && (
