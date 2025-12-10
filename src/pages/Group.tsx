@@ -153,13 +153,13 @@ const Group = () => {
 
         {/* Profile Actions */}
         <div className="flex flex-wrap gap-3 mb-8 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-          <Button onClick={() => navigate(`/grupo/${id}/crear-perfil`)} className="gap-2">
+          <Button onClick={() => navigate(`/grupo/${id}/criar-perfil`)} className="gap-2">
             <UserPlus className="h-4 w-4" />
-            Crear mi perfil
+            Criar meu perfil
           </Button>
-          <Button variant="outline" onClick={() => navigate(`/grupo/${id}/perfiles`)} className="gap-2">
+          <Button variant="outline" onClick={() => navigate(`/grupo/${id}/perfis`)} className="gap-2">
             <Eye className="h-4 w-4" />
-            Ver perfiles
+            Ver perfis
           </Button>
         </div>
 

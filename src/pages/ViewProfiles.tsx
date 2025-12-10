@@ -34,15 +34,15 @@ export default function ViewProfiles() {
           className="mb-6 gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver al grupo
+          Voltar ao grupo
         </Button>
 
-        <h1 className="text-2xl font-bold mb-6">Perfiles del grupo</h1>
+        <h1 className="text-2xl font-bold mb-6">Perfis do grupo</h1>
 
         {profiles.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              Aún no hay perfiles completados en este grupo.
+              Ainda não há perfis completos neste grupo.
             </p>
           </div>
         ) : (

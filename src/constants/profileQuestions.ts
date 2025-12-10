@@ -1,28 +1,43 @@
 export const PROFILE_QUESTIONS = [
   {
+    id: 'tres_palavras',
+    question: 'Três palavras que te definem',
+    placeholder: 'Ex: Criativo, determinado, sonhador...'
+  },
+  {
     id: 'hobbies',
-    question: '¿Cuáles son tus hobbies o pasatiempos favoritos?',
-    placeholder: 'Ej: Me gusta leer, jugar fútbol, cocinar...'
+    question: 'Hobbies ou paixões',
+    placeholder: 'Ex: Música, esportes, leitura, viagens...'
   },
   {
-    id: 'music',
-    question: '¿Qué tipo de música te gusta?',
-    placeholder: 'Ej: Rock, pop, reggaetón, clásica...'
+    id: 'tipo_presente',
+    question: 'Tipo de presente que mais gosta',
+    placeholder: 'Ex: Experiências, livros, tecnologia, algo feito à mão...'
   },
   {
-    id: 'food',
-    question: '¿Cuál es tu comida favorita?',
-    placeholder: 'Ej: Pizza, tacos, sushi...'
+    id: 'algo_ninguem_imagina',
+    question: 'Algo que ninguém imagina sobre você',
+    placeholder: 'Ex: Tenho medo de altura, já fiz paraquedismo...'
   },
   {
-    id: 'travel',
-    question: '¿Cuál es tu destino de viaje soñado?',
-    placeholder: 'Ej: Japón, París, las playas del Caribe...'
+    id: 'frase_costuma_dizer',
+    question: 'Uma frase que você costuma dizer',
+    placeholder: 'Ex: "A vida é curta demais para...", "Tudo vai dar certo"...'
   },
   {
-    id: 'fun_fact',
-    question: '¿Cuál es un dato curioso sobre ti?',
-    placeholder: 'Ej: Puedo resolver un cubo Rubik en menos de un minuto...'
+    id: 'estilo_vida',
+    question: 'Seu estilo de vida',
+    placeholder: 'Ex: Caseiro, aventureiro, esportista, workaholic...'
+  },
+  {
+    id: 'personagem_seria',
+    question: 'Se fosse um personagem, qual seria?',
+    placeholder: 'Ex: Harry Potter, Sherlock Holmes, Mulher Maravilha...'
+  },
+  {
+    id: 'comida_representa',
+    question: 'Uma comida que te representa',
+    placeholder: 'Ex: Pizza, feijoada, sushi, brigadeiro...'
   }
 ] as const;
 

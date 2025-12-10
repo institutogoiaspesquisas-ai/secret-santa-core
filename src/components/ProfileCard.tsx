@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { PROFILE_QUESTIONS } from '@/constants/profileQuestions';
+import { HintStatusBadge } from '@/components/HintStatusBadge';
 import type { ProfileWithUser } from '@/types/profile';
 
 interface ProfileCardProps {
@@ -14,7 +15,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const userName = profile.user_profiles?.full_name || 'Usuario';
+  const userName = profile.user_profiles?.full_name || 'Usuário';
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   const toggleAudio = () => {
@@ -42,7 +43,10 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <AvatarFallback className="text-lg">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">{userName}</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-lg">{userName}</h3>
+              <HintStatusBadge hintsGenerated={profile.hints_generated} size="sm" />
+            </div>
             {profile.audio_url && (
               <Button
                 variant="ghost"
@@ -51,7 +55,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 className="gap-2 -ml-3 text-primary"
               >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                {isPlaying ? 'Pausar' : 'Escuchar presentación'}
+                {isPlaying ? 'Pausar' : 'Ouvir apresentação'}
               </Button>
             )}
           </div>
@@ -72,7 +76,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         
         {profile.transcript && (
           <div className="pt-4 border-t">
-            <p className="text-sm font-medium text-muted-foreground">Transcripción del audio</p>
+            <p className="text-sm font-medium text-muted-foreground">Transcrição do áudio</p>
             <p className="mt-1 text-sm italic">{profile.transcript}</p>
           </div>
         )}

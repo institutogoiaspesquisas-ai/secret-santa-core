@@ -57,6 +57,7 @@ export function useProfiles(groupId: string) {
       const enrichedProfiles: ProfileWithUser[] = (profilesData || []).map(p => ({
         ...p,
         answers: p.answers as ProfileAnswers,
+        hints_generated: p.hints_generated ?? false,
         validation_status: p.validation_status as 'pending' | 'approved' | 'rejected',
         user_profiles: userProfilesMap.get(p.user_id) || undefined
       }));
@@ -64,6 +65,7 @@ export function useProfiles(groupId: string) {
       const enrichedMyProfile: ProfileWithUser | null = myProfileData ? {
         ...myProfileData,
         answers: myProfileData.answers as ProfileAnswers,
+        hints_generated: myProfileData.hints_generated ?? false,
         validation_status: myProfileData.validation_status as 'pending' | 'approved' | 'rejected',
         user_profiles: userProfilesMap.get(myProfileData.user_id) || undefined
       } : null;
@@ -83,7 +85,7 @@ export function useProfiles(groupId: string) {
     answers: ProfileAnswers,
     audioUrl?: string,
     transcript?: string
-  ) => {
+  ): Promise<{ success: boolean; error?: string; profileId?: string }> => {
     try {
       const profileData = {
         user_id: userId,
@@ -94,21 +96,46 @@ export function useProfiles(groupId: string) {
         is_complete: true,
       };
 
+      let profileId: string;
+
       if (myProfile) {
         const { error } = await supabase
           .from('profiles')
           .update(profileData)
           .eq('id', myProfile.id);
         if (error) throw error;
+        profileId = myProfile.id;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
-          .insert(profileData);
+          .insert(profileData)
+          .select('id')
+          .single();
         if (error) throw error;
+        profileId = data.id;
+      }
+
+      // Disparar geração de dicas pela IA
+      console.log('Triggering hint generation for profile:', profileId);
+      
+      const { error: hintError } = await supabase.functions.invoke('generate-hints', {
+        body: {
+          profileId,
+          userId,
+          groupId,
+          answers
+        }
+      });
+
+      if (hintError) {
+        console.error('Error generating hints:', hintError);
+        // Não falha o save, apenas loga o erro
+      } else {
+        console.log('Hints generated successfully');
       }
 
       await fetchProfiles();
-      return { success: true };
+      return { success: true, profileId };
     } catch (err) {
       console.error('Error saving profile:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Error saving profile' };
