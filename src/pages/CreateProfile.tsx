@@ -6,6 +6,7 @@ import { AudioRecorder } from '@/components/AudioRecorder';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { AppLayout } from '@/components/layout';
 import { ArrowLeft, Loader2, Sparkles, Lock, CheckCircle, Mic, FileText, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useProfiles } from '@/hooks/useProfiles';
@@ -149,8 +150,8 @@ export default function CreateProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
+    <AppLayout>
+      <div className="max-w-2xl mx-auto px-4 py-8 pt-20 lg:pt-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Button
@@ -333,6 +334,6 @@ export default function CreateProfile() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AppLayout>
   );
 }

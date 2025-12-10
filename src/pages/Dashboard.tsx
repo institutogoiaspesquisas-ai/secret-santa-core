@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppLayout } from "@/components/layout";
 import {
   Gift,
   Plus,
   Users,
-  LogOut,
   Copy,
   Check,
   Clock,
@@ -81,13 +81,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    toast({
-      title: "Logout",
-      description: "Função será implementada com Supabase.",
-    });
-  };
-
   const getStatusBadge = (group: typeof mockGroups[0]) => {
     if (group.status === "pending") {
       return (
@@ -125,30 +118,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Gift className="h-6 w-6 text-primary" />
-            <span className="font-display font-bold text-lg">Quem Sou Eu IA</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-medium text-primary">U</span>
-              </div>
-              <span className="text-sm font-medium">Olá, Usuário</span>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="btn-hover-scale">
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <AppLayout>
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-20 lg:pt-8">
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold mb-2">Meus Grupos</h1>
@@ -282,7 +254,7 @@ const Dashboard = () => {
             ))}
           </div>
         )}
-      </main>
+      </div>
 
       {/* Modals */}
       <CreateGroupModal
@@ -293,7 +265,7 @@ const Dashboard = () => {
         open={isJoinModalOpen}
         onOpenChange={setIsJoinModalOpen}
       />
-    </div>
+    </AppLayout>
   );
 };
 
