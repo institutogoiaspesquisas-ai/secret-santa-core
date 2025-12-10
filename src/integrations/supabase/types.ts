@@ -79,12 +79,57 @@ export type Database = {
         }
         Relationships: []
       }
+      hints: {
+        Row: {
+          created_at: string | null
+          generated_at: string | null
+          group_id: string
+          hint1: string
+          hint2: string
+          hint3: string
+          id: string
+          is_visible: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          generated_at?: string | null
+          group_id: string
+          hint1: string
+          hint2: string
+          hint3: string
+          id?: string
+          is_visible?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          generated_at?: string | null
+          group_id?: string
+          hint1?: string
+          hint2?: string
+          hint3?: string
+          id?: string
+          is_visible?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hints_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           answers: Json | null
           audio_url: string | null
           created_at: string | null
           group_id: string
+          hints_generated: boolean | null
           id: string
           is_complete: boolean | null
           transcript: string | null
@@ -97,6 +142,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string | null
           group_id: string
+          hints_generated?: boolean | null
           id?: string
           is_complete?: boolean | null
           transcript?: string | null
@@ -109,6 +155,7 @@ export type Database = {
           audio_url?: string | null
           created_at?: string | null
           group_id?: string
+          hints_generated?: boolean | null
           id?: string
           is_complete?: boolean | null
           transcript?: string | null
