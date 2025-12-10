@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Gift, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -30,6 +32,7 @@ const Auth = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +40,30 @@ const Auth = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        
+        // Redirect to dashboard if authenticated
+        if (session) {
+          navigate("/dashboard");
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     const urlMode = searchParams.get("mode");
@@ -84,16 +111,94 @@ const Auth = () => {
 
     setIsLoading(true);
 
-    // TODO: Integrate with Supabase authentication
-    // This is a placeholder for when Supabase is connected
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (mode === "signup") {
+        const redirectUrl = `${window.location.origin}/`;
+        
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              full_name: formData.name,
+            }
+          }
+        });
+
+        if (error) {
+          if (error.message.includes("already registered")) {
+            toast({
+              title: "E-mail já cadastrado",
+              description: "Este e-mail já está registrado. Tente fazer login.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erro ao criar conta",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+
+        if (data.user && !data.session) {
+          toast({
+            title: "Verifique seu e-mail",
+            description: "Enviamos um link de confirmação para seu e-mail.",
+          });
+        } else if (data.session) {
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Bem-vindo ao Quem Sou Eu IA!",
+          });
+          navigate("/dashboard");
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast({
+              title: "Credenciais inválidas",
+              description: "E-mail ou senha incorretos. Verifique e tente novamente.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes("Email not confirmed")) {
+            toast({
+              title: "E-mail não confirmado",
+              description: "Por favor, confirme seu e-mail antes de fazer login.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erro ao fazer login",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+
+        toast({
+          title: "Login realizado!",
+          description: "Bem-vindo de volta!",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
       toast({
-        title: "Supabase não conectado",
-        description: "Conecte seu projeto Supabase nas configurações para habilitar a autenticação.",
+        title: "Erro inesperado",
+        description: "Ocorreu um erro. Tente novamente.",
         variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
