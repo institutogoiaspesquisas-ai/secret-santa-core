@@ -54,20 +54,7 @@ export function useGroups() {
             // Buscar memberships do usuário
             const { data: memberships, error: membershipError } = await supabase
                 .from('group_members')
-                .select(`
-          id,
-          role,
-          status,
-          group_id,
-          groups (
-            id,
-            name,
-            code,
-            owner_id,
-            created_at,
-            updated_at
-          )
-        `)
+                .select('id, role, status, group_id')
                 .eq('user_id', user.id);
 
             if (membershipError) throw membershipError;
@@ -78,12 +65,25 @@ export function useGroups() {
                 return;
             }
 
-            // Para cada grupo, buscar contagens e status do perfil
+            // Buscar dados de cada grupo
+            const groupIds = memberships.map(m => m.group_id);
+            const { data: groupsData, error: groupsError } = await supabase
+                .from('groups')
+                .select('*')
+                .in('id', groupIds);
+
+            if (groupsError) throw groupsError;
+
+            const groupsMap = new Map<string, Group>(
+                (groupsData || []).map(g => [g.id, g as Group])
+            );
+
+            // Para cada membership, buscar contagens e status do perfil
             const groupsWithDetails = await Promise.all(
                 memberships
-                    .filter(m => m.groups)
+                    .filter(m => groupsMap.has(m.group_id))
                     .map(async (membership) => {
-                        const group = membership.groups as unknown as Group;
+                        const group = groupsMap.get(membership.group_id)!;
 
                         // Contar membros aprovados
                         const { count: memberCount } = await supabase
