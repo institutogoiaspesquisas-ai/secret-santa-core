@@ -168,7 +168,7 @@ export default function GameMode() {
     const hasCurrentPlayer = !!status?.currentPlayerId;
 
     return (
-        <div className="min-h-screen bg-[#101820]">
+        <div className="min-h-screen game-bg particles-bg">
             {/* Confetti effect */}
             <ConfettiEffect
                 isActive={showConfetti}
@@ -204,8 +204,8 @@ export default function GameMode() {
                             </Button>
                         </Link>
                         <div className="flex items-center gap-2">
-                            <Trophy className="h-6 w-6 text-[#FFD166]" />
-                            <span className="font-bold text-lg text-white">Modo Jogo</span>
+                            <Trophy className="h-6 w-6 text-[#FFD166] icon-pulse" />
+                            <span className="font-display font-bold text-lg text-white">Modo Jogo</span>
                         </div>
                     </div>
 
@@ -229,7 +229,7 @@ export default function GameMode() {
                                     <div className="w-20 h-20 rounded-full bg-[#FFD166]/20 flex items-center justify-center mx-auto mb-6">
                                         <Sparkles className="h-10 w-10 text-[#FFD166]" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-white mb-2">
+                                    <h2 className="text-2xl font-display font-bold text-white mb-2">
                                         Modo Jogo
                                     </h2>
                                     <p className="text-white/60 mb-6 max-w-md mx-auto">
@@ -239,8 +239,7 @@ export default function GameMode() {
                                     <Button
                                         onClick={startGame}
                                         disabled={loading}
-                                        className="bg-[#FFD166] text-[#1E1E1E] hover:bg-[#FFD166]/80 gap-2"
-                                        size="lg"
+                                        className="bg-[#FFD166] text-[#1E1E1E] hover:bg-[#FFD166]/80 gap-2 btn-hover-scale"
                                     >
                                         {loading ? (
                                             <Loader2 className="h-5 w-5 animate-spin" />
@@ -260,14 +259,14 @@ export default function GameMode() {
                                     <div className="w-20 h-20 rounded-full bg-[#FFD166] flex items-center justify-center mx-auto mb-6">
                                         <Trophy className="h-10 w-10 text-[#1E1E1E]" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-white mb-2">
+                                    <h2 className="text-2xl font-display font-bold text-white mb-2">
                                         🎉 Jogo Finalizado!
                                     </h2>
                                     <p className="text-white/60 mb-6">
                                         Todos os mistérios foram revelados. Que comece a troca de presentes!
                                     </p>
                                     <Link to={`/grupo/${groupId}`}>
-                                        <Button variant="outline" className="border-[#FFD166]/30 text-[#FFD166] hover:bg-[#FFD166]/10">
+                                        <Button variant="outline" className="border-[#FFD166]/30 text-[#FFD166] hover:bg-[#FFD166]/10 btn-hover-scale">
                                             Voltar ao Grupo
                                         </Button>
                                     </Link>
@@ -282,7 +281,7 @@ export default function GameMode() {
                                     <div className="w-16 h-16 rounded-full bg-[#2E8BFF]/20 flex items-center justify-center mx-auto mb-4">
                                         <Shuffle className="h-8 w-8 text-[#2E8BFF]" />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white mb-2">
+                                    <h3 className="text-xl font-display font-semibold text-white mb-2">
                                         Pronto para a próxima rodada?
                                     </h3>
                                     <p className="text-white/60 mb-6">
@@ -291,7 +290,7 @@ export default function GameMode() {
                                     <Button
                                         onClick={nextPlayer}
                                         disabled={loading}
-                                        className="bg-[#2E8BFF] hover:bg-[#2E8BFF]/80 gap-2"
+                                        className="bg-[#2E8BFF] hover:bg-[#2E8BFF]/80 gap-2 btn-hover-scale"
                                     >
                                         {loading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
