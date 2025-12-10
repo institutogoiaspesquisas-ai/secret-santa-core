@@ -18,6 +18,7 @@ import {
   Crown,
   UserPlus,
   Eye,
+  Play,
 } from "lucide-react";
 
 // Mock data - will be replaced with Supabase data
@@ -161,6 +162,15 @@ const Group = () => {
             <Eye className="h-4 w-4" />
             Ver perfis
           </Button>
+          {mockGroup.isOwner && (
+            <Button
+              onClick={() => navigate(`/grupo/${id}/jogo`)}
+              className="gap-2 bg-[#FFD166] text-[#1E1E1E] hover:bg-[#FFD166]/80"
+            >
+              <Play className="h-4 w-4" />
+              Iniciar Modo Jogo
+            </Button>
+          )}
         </div>
 
         {/* Tabs */}

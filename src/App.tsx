@@ -10,6 +10,7 @@ import Group from "./pages/Group";
 import JoinGroup from "./pages/JoinGroup";
 import CreateProfile from "./pages/CreateProfile";
 import ViewProfiles from "./pages/ViewProfiles";
+import GameMode from "./pages/GameMode";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/grupo/:id" element={<Group />} />
           <Route path="/grupo/:groupId/criar-perfil" element={<CreateProfile />} />
           <Route path="/grupo/:groupId/perfis" element={<ViewProfiles />} />
+          <Route path="/grupo/:groupId/jogo" element={<GameMode />} />
           <Route path="/entrar-grupo" element={<JoinGroup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
