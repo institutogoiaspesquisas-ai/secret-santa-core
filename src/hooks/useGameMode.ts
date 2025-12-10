@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { GameStatus, HintData, VerifyResult, RevealResult, GamePlayer, GameFeedbackType } from '@/types/game';
-import { getRandomMessage } from '@/constants/gameMessages';
+import { getRandomMessage, clearReactionsCache } from '@/constants/gameMessages';
 
 interface UseGameModeProps {
     groupId: string;
@@ -33,6 +33,10 @@ export function useGameMode({ groupId }: UseGameModeProps) {
         showConfetti: false,
         isGameEnded: false,
     });
+
+    // Track used reaction IDs to avoid repetition within a round
+    const usedSuccessIds = useRef<string[]>([]);
+    const usedFailIds = useRef<string[]>([]);
 
     const callGameControl = useCallback(async (action: string, params: Record<string, unknown> = {}) => {
         const { data, error } = await supabase.functions.invoke('game-control', {
@@ -76,12 +80,19 @@ export function useGameMode({ groupId }: UseGameModeProps) {
             setState(s => ({ ...s, loading: true, error: null }));
             await callGameControl('start');
 
+            // Reset used IDs for new game
+            usedSuccessIds.current = [];
+            usedFailIds.current = [];
+            clearReactionsCache();
+
+            const message = await getRandomMessage('START');
+
             setState(s => ({
                 ...s,
                 loading: false,
                 feedback: {
                     type: 'info',
-                    message: getRandomMessage('START'),
+                    message,
                     isVisible: true,
                 },
             }));
@@ -101,12 +112,14 @@ export function useGameMode({ groupId }: UseGameModeProps) {
             setState(s => ({ ...s, loading: true, error: null, currentHint: null }));
             await callGameControl('next');
 
+            const message = await getRandomMessage('NEW_ROUND');
+
             setState(s => ({
                 ...s,
                 loading: false,
                 feedback: {
                     type: 'info',
-                    message: getRandomMessage('NEW_ROUND'),
+                    message,
                     isVisible: true,
                 },
             }));
@@ -152,23 +165,27 @@ export function useGameMode({ groupId }: UseGameModeProps) {
             const data = await callGameControl('verify', { guessUserId }) as VerifyResult & { success: boolean };
 
             if (data.correct) {
+                const message = await getRandomMessage('CORRECT_GUESS', usedSuccessIds.current);
+
                 setState(s => ({
                     ...s,
                     loading: false,
                     showConfetti: true,
                     feedback: {
                         type: 'success',
-                        message: getRandomMessage('CORRECT_GUESS'),
+                        message,
                         isVisible: true,
                     },
                 }));
             } else {
+                const message = await getRandomMessage('WRONG_GUESS', usedFailIds.current);
+
                 setState(s => ({
                     ...s,
                     loading: false,
                     feedback: {
                         type: 'error',
-                        message: getRandomMessage('WRONG_GUESS'),
+                        message,
                         isVisible: true,
                     },
                 }));
