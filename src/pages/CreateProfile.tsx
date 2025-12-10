@@ -5,7 +5,8 @@ import { ProfileQuestions } from '@/components/ProfileQuestions';
 import { AudioRecorder } from '@/components/AudioRecorder';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Loader2, Sparkles, Lock, CheckCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, Loader2, Sparkles, Lock, CheckCircle, Mic, FileText, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useProfiles } from '@/hooks/useProfiles';
 import { PROFILE_QUESTIONS } from '@/constants/profileQuestions';
@@ -22,6 +23,7 @@ export default function CreateProfile() {
   const [hintsGenerating, setHintsGenerating] = useState(false);
   const [hintsComplete, setHintsComplete] = useState(false);
   const [step, setStep] = useState<'questions' | 'audio' | 'review'>('questions');
+  const [inputMode, setInputMode] = useState<'text' | 'audio'>('text');
 
   const { myProfile, createOrUpdateProfile, loading } = useProfiles(groupId || '');
 
@@ -55,21 +57,19 @@ export default function CreateProfile() {
 
     setSaving(true);
     setHintsGenerating(true);
-    
+
     const result = await createOrUpdateProfile(user.id, answers, audioUrl || undefined, transcript || undefined);
-    
+
     setSaving(false);
-    
+
     if (result.success) {
-      // Mostrar animação de conclusão das dicas
       setHintsComplete(true);
-      
+
       toast({
         title: 'Perfil salvo com sucesso! 🎉',
         description: 'Suas dicas misteriosas foram geradas e guardadas em sigilo.',
       });
-      
-      // Aguardar um pouco para o usuário ver o feedback
+
       setTimeout(() => {
         navigate(`/grupo/${groupId}`);
       }, 2500);
@@ -83,50 +83,63 @@ export default function CreateProfile() {
     }
   };
 
+  // Calculate progress
+  const answeredQuestions = answers
+    ? Object.values(answers).filter(a => a && a.trim() !== '').length
+    : 0;
+  const progress = (answeredQuestions / PROFILE_QUESTIONS.length) * 100;
+
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Carregando...</p>
+        </div>
       </div>
     );
   }
 
-  // Tela de feedback após salvar
+  // Hints generation screen
   if (hintsGenerating) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardContent className="pt-8 pb-8">
+      <div className="min-h-screen game-bg flex items-center justify-center p-4">
+        <Card className="max-w-md w-full text-center bg-[#1E1E1E] border-[#FFD166]/30">
+          <CardContent className="pt-10 pb-10">
             {!hintsComplete ? (
               <>
-                <div className="relative mx-auto w-20 h-20 mb-6">
+                <div className="relative mx-auto w-24 h-24 mb-8">
                   <div className="absolute inset-0 rounded-full bg-[#FFD166]/20 animate-ping" />
-                  <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-[#FFD166]/30">
-                    <Sparkles className="h-10 w-10 text-[#FFD166] animate-pulse" />
+                  <div className="relative flex items-center justify-center w-24 h-24 rounded-full bg-[#FFD166]/30">
+                    <Sparkles className="h-12 w-12 text-[#FFD166] icon-pulse" />
                   </div>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Gerando dicas misteriosas...</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-2xl font-display font-bold text-white mb-3">
+                  Gerando dicas misteriosas...
+                </h2>
+                <p className="text-white/60">
                   A IA está analisando seu perfil e criando suas 3 dicas secretas.
                 </p>
               </>
             ) : (
               <>
-                <div className="relative mx-auto w-20 h-20 mb-6">
-                  <div className="flex items-center justify-center w-20 h-20 rounded-full bg-[#FFD166]">
-                    <Lock className="h-10 w-10 text-[#1E1E1E]" />
+                <div className="relative mx-auto w-24 h-24 mb-8">
+                  <div className="flex items-center justify-center w-24 h-24 rounded-full bg-[#FFD166]">
+                    <Lock className="h-12 w-12 text-[#1E1E1E]" />
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <CheckCircle className="h-6 w-6 text-green-500" />
-                  <h2 className="text-xl font-semibold">Perfil concluído!</h2>
+                  <h2 className="text-2xl font-display font-bold text-white">Perfil concluído!</h2>
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-white/60 mb-6">
                   A IA analisou seu perfil e guardou suas três dicas em segredo.
                 </p>
-                <p className="text-sm text-muted-foreground italic">
-                  🤖✨ Espere o momento da revelação para descobrir o que ela escreveu sobre você!
-                </p>
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <p className="text-sm text-white/80 italic">
+                    🤖✨ Espere o momento da revelação para descobrir o que ela escreveu sobre você!
+                  </p>
+                </div>
               </>
             )}
           </CardContent>
@@ -138,22 +151,68 @@ export default function CreateProfile() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/grupo/${groupId}`)}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar ao grupo
-        </Button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(`/grupo/${groupId}`)}
+            className="gap-2 btn-hover-scale"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao grupo
+          </Button>
 
-        <Card>
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-secondary">
+            <Button
+              variant={inputMode === 'text' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setInputMode('text')}
+              className="gap-1.5 btn-hover-scale"
+            >
+              <FileText className="h-4 w-4" />
+              Texto
+            </Button>
+            <Button
+              variant={inputMode === 'audio' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setInputMode('audio')}
+              className="gap-1.5 btn-hover-scale"
+            >
+              <Mic className="h-4 w-4" />
+              Áudio
+            </Button>
+          </div>
+        </div>
+
+        {/* Progress Card */}
+        <Card className="mb-6 border-primary/20">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Progresso do perfil</span>
+              <span className="text-sm text-muted-foreground">
+                {answeredQuestions} de {PROFILE_QUESTIONS.length} perguntas
+              </span>
+            </div>
+            <Progress value={progress} className="h-2" />
+            {progress === 100 && (
+              <div className="flex items-center gap-1.5 mt-2 text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Perfil completo 🎉</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Main Card */}
+        <Card className="card-hover-shadow">
           <CardHeader>
-            <CardTitle>
-              {myProfile ? 'Editar meu perfil' : 'Criar meu perfil'}
+            <CardTitle className="font-display text-xl flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-[#FFD166]" />
+              {myProfile ? 'Editar meu perfil' : 'Monte seu perfil secreto'}
             </CardTitle>
-            <CardDescription>
-              {step === 'questions' && 'Responda as perguntas para que os outros te conheçam melhor'}
+            <CardDescription className="text-base">
+              {step === 'questions' && 'Quanto mais sincero e criativo você for, mais divertidas serão as dicas que a IA criará sobre você.'}
               {step === 'audio' && 'Grave uma mensagem de voz se apresentando (opcional)'}
               {step === 'review' && 'Revise seu perfil antes de salvar'}
             </CardDescription>
@@ -174,20 +233,31 @@ export default function CreateProfile() {
                   groupId={groupId || ''}
                   userId={user.id}
                 />
-                
+
                 {transcript && (
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-sm font-medium mb-2">Transcrição:</p>
-                    <p className="text-sm">{transcript}</p>
+                  <div className="p-4 bg-secondary rounded-xl">
+                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Transcrição:
+                    </p>
+                    <p className="text-sm text-muted-foreground italic">{transcript}</p>
                   </div>
                 )}
 
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStep('questions')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep('questions')}
+                    className="btn-hover-scale"
+                  >
                     Voltar
                   </Button>
-                  <Button onClick={() => setStep('review')} className="flex-1">
+                  <Button
+                    onClick={() => setStep('review')}
+                    className="flex-1 btn-hover-scale gap-2"
+                  >
                     {audioUrl ? 'Continuar' : 'Pular áudio'}
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -200,40 +270,61 @@ export default function CreateProfile() {
                     const answer = answers[q.id as keyof ProfileAnswers];
                     if (!answer) return null;
                     return (
-                      <div key={q.id}>
-                        <p className="text-sm font-medium text-muted-foreground">{q.question}</p>
-                        <p>{answer}</p>
+                      <div key={q.id} className="p-4 rounded-xl bg-secondary/50">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{q.question}</p>
+                        <p className="font-medium">{answer}</p>
                       </div>
                     );
                   })}
                 </div>
 
                 {transcript && (
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-sm font-medium mb-2">Áudio transcrito:</p>
-                    <p className="text-sm italic">{transcript}</p>
+                  <div className="p-4 bg-secondary rounded-xl">
+                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <Mic className="h-4 w-4 text-primary" />
+                      Áudio transcrito:
+                    </p>
+                    <p className="text-sm italic text-muted-foreground">{transcript}</p>
                   </div>
                 )}
 
-                <div className="p-4 rounded-lg border border-[#FFD166]/50 bg-[#FFD166]/10">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Sparkles className="h-4 w-4 text-[#FFD166]" />
-                    <span>Ao salvar, a IA gerará 3 dicas misteriosas sobre você!</span>
+                <div className="p-4 rounded-xl border-2 border-[#FFD166]/30 bg-[#FFD166]/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#FFD166]/20 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-[#FFD166]" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Pronto para gerar as dicas!</p>
+                      <p className="text-sm text-muted-foreground">
+                        Ao salvar, a IA gerará 3 dicas misteriosas sobre você.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStep('audio')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep('audio')}
+                    className="btn-hover-scale"
+                  >
                     Voltar
                   </Button>
-                  <Button onClick={handleSaveProfile} disabled={saving} className="flex-1">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="flex-1 btn-glow btn-hover-scale gap-2"
+                  >
                     {saving ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Salvando...
                       </>
                     ) : (
-                      'Salvar perfil'
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Salvar perfil e gerar dicas
+                      </>
                     )}
                   </Button>
                 </div>

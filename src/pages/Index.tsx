@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Sparkles, Gift, ArrowRight } from "lucide-react";
+import { Users, Sparkles, Gift, ArrowRight, MessageCircle, Lock, Gamepad2, Zap, Brain, Shield } from "lucide-react";
 
 const Index = () => {
   return (
@@ -14,12 +14,12 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/auth?mode=login">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="btn-hover-scale">
                 Entrar
               </Button>
             </Link>
             <Link to="/auth?mode=signup">
-              <Button size="sm" className="btn-glow">
+              <Button size="sm" className="btn-glow btn-hover-scale">
                 Criar Conta
               </Button>
             </Link>
@@ -29,46 +29,43 @@ const Index = () => {
 
       {/* Hero Section */}
       <main className="pt-16">
-        <section className="relative overflow-hidden py-20 lg:py-32">
-          {/* Background decoration */}
+        <section className="relative overflow-hidden hero-gradient py-24 lg:py-36">
+          {/* Decorative elements */}
           <div className="absolute inset-0 -z-10">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+            <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#FFD166]/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
           </div>
 
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center animate-fade-in">
+            <div className="max-w-4xl mx-auto text-center animate-fade-in">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-accent-foreground mb-8">
-                <Sparkles className="h-4 w-4 text-accent" />
-                <span className="text-sm font-medium">Amigo Oculto Inteligente</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFD166]/20 text-[#FFD166] mb-8">
+                <Sparkles className="h-4 w-4 icon-pulse" />
+                <span className="text-sm font-medium">Amigo Oculto com Identidade Oculta</span>
               </div>
 
               {/* Title */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-white">
                 Quem Sou Eu IA
-                <span className="block text-gradient mt-2">
-                  O Amigo Oculto mais inteligente do mundo
-                </span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                Crie grupos, convide amigos e deixe a IA cuidar do mistério. 
-                Uma experiência única de Amigo Oculto com identidade secreta.
+              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto mb-10 font-light">
+                O Amigo Oculto em que a IA descreve você melhor do que seus amigos.
               </p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/auth?mode=signup">
-                  <Button size="lg" className="btn-glow gap-2 text-base px-8">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 btn-hover-scale gap-2 text-base px-8 h-12">
                     Criar Conta
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
                 <Link to="/entrar-grupo">
-                  <Button size="lg" variant="outline" className="gap-2 text-base px-8">
-                    <Users className="h-4 w-4" />
+                  <Button size="lg" variant="outline" className="btn-gold-outline btn-hover-scale gap-2 text-base px-8 h-12">
+                    <Users className="h-5 w-5" />
                     Entrar com Código de Grupo
                   </Button>
                 </Link>
@@ -77,51 +74,150 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-20 bg-secondary/30">
+        {/* How it Works Section */}
+        <section className="py-20 bg-background">
           <div className="container mx-auto px-4">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-center mb-4">
               Como Funciona
             </h2>
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Três passos simples para transformar seu Amigo Oculto em uma experiência inesquecível
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {[
                 {
                   icon: Users,
-                  title: "Crie seu Grupo",
-                  description: "Crie um grupo e receba um código único para compartilhar com amigos.",
+                  step: "1",
+                  title: "Crie um grupo e compartilhe o código",
+                  description: "Crie seu grupo em segundos e envie o código único para convidar seus amigos e família.",
                 },
                 {
-                  icon: Gift,
-                  title: "Convide Amigos",
-                  description: "Compartilhe o código e aguarde as solicitações de entrada.",
+                  icon: MessageCircle,
+                  step: "2",
+                  title: "Cada pessoa preenche seu perfil",
+                  description: "Responda perguntas divertidas por texto ou grave um áudio se apresentando.",
                 },
                 {
-                  icon: Sparkles,
-                  title: "Deixe a IA Trabalhar",
-                  description: "A inteligência artificial cuida do sorteio e da diversão.",
+                  icon: Brain,
+                  step: "3",
+                  title: "A IA cria dicas misteriosas",
+                  description: "Nossa IA analisa cada perfil e gera 3 dicas enigmáticas para o jogo presencial.",
                 },
               ].map((feature, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-center text-center p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="relative flex flex-col items-center text-center p-8 rounded-2xl bg-card border border-border card-hover-shadow animate-fade-in"
+                  style={{ animationDelay: `${index * 0.15}s` }}
                 >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <feature.icon className="h-7 w-7 text-primary" />
+                  {/* Step number */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#FFD166] flex items-center justify-center font-display font-bold text-[#1E1E1E] text-sm">
+                    {feature.step}
                   </div>
-                  <h3 className="font-display font-semibold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm">{feature.description}</p>
+
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 mt-2">
+                    <feature.icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-display font-bold text-lg mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
+
+        {/* Why Different Section */}
+        <section className="py-20 bg-secondary/30">
+          <div className="container mx-auto px-4">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-center mb-4">
+              Por que é diferente?
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Não é só um sorteio. É uma experiência completa de descoberta.
+            </p>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {[
+                {
+                  icon: Sparkles,
+                  title: "Dicas da IA",
+                  description: "Dicas poéticas, pessoais e engraçadas criadas exclusivamente para cada pessoa.",
+                },
+                {
+                  icon: Lock,
+                  title: "Sigilo Total",
+                  description: "Ninguém vê as dicas até o momento do jogo. Surpresa garantida!",
+                },
+                {
+                  icon: Gamepad2,
+                  title: "Modo Jogo",
+                  description: "Interface especial com roleta, confete e frases da IA para animar a festa.",
+                },
+                {
+                  icon: Zap,
+                  title: "Simples e Rápido",
+                  description: "Em minutos você cria o grupo e todos podem participar pelo celular.",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center text-center p-6 rounded-xl bg-card border border-border card-hover-shadow animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[#FFD166]/20 flex items-center justify-center mb-4">
+                    <item.icon className="h-6 w-6 text-[#FFD166]" />
+                  </div>
+                  <h3 className="font-display font-semibold text-base mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-primary/5">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              Pronto para começar?
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              Crie seu grupo agora e transforme o Amigo Oculto da sua família ou amigos em algo inesquecível.
+            </p>
+            <Link to="/auth?mode=signup">
+              <Button size="lg" className="btn-glow btn-hover-scale gap-2 text-base px-10 h-12">
+                Começar Agora
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Quem Sou Eu IA. Todos os direitos reservados.</p>
+      <footer className="py-12 border-t border-border bg-card">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-primary" />
+              <span className="font-display font-bold">Quem Sou Eu IA</span>
+            </div>
+
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <a href="#" className="hover:text-foreground transition-colors">Contato</a>
+              <a href="#" className="hover:text-foreground transition-colors">Termos de Uso</a>
+              <a href="#" className="hover:text-foreground transition-colors">Privacidade</a>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-sm text-muted-foreground">
+              Criado para transformar seu amigo oculto em uma experiência memorável.
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-2">
+              © {new Date().getFullYear()} Quem Sou Eu IA. Todos os direitos reservados.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
