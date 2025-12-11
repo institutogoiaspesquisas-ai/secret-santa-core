@@ -181,13 +181,31 @@ export default function GameMode() {
 
     // Auto-detect and start dual mode when 2 players remain
     useEffect(() => {
-        if (status?.inProgress && !status.isDualMode && !status.currentPlayerId) {
+        console.log('🔍 Dual Mode Check:', {
+            inProgress: status?.inProgress,
+            isDualMode: status?.isDualMode,
+            currentPlayerId: status?.currentPlayerId,
+            totalPlayers: status?.totalPlayers,
+            revealedCount: status?.revealedCount,
+            remaining: status ? status.totalPlayers - status.revealedCount : 0
+        });
+
+        // Check if we should activate dual mode
+        // Conditions:
+        // 1. Game is in progress
+        // 2. Not already in dual mode
+        // 3. Exactly 2 players remaining
+        if (status?.inProgress && !status.isDualMode) {
             const remaining = status.totalPlayers - status.revealedCount;
+            console.log(`✨ Remaining players: ${remaining}`);
+
             if (remaining === 2) {
+                console.log('🎭 Activating DUAL MODE!');
+                // Clear current player if set, then start dual mode
                 startDualMode();
             }
         }
-    }, [status, startDualMode]);
+    }, [status?.inProgress, status?.isDualMode, status?.totalPlayers, status?.revealedCount, startDualMode]);
 
     // Dual mode handlers
     const handleDualShowHint = async (side: 'left' | 'right', hintIndex: number) => {
