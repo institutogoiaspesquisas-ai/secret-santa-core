@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileQuestions } from '@/components/ProfileQuestions';
-import { AudioRecorder } from '@/components/AudioRecorder';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AppLayout } from '@/components/layout';
-import { ArrowLeft, Loader2, Sparkles, Lock, CheckCircle, Mic, FileText, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles, Lock, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useProfiles } from '@/hooks/useProfiles';
 import { PROFILE_QUESTIONS } from '@/constants/profileQuestions';
@@ -18,13 +17,9 @@ export default function CreateProfile() {
   const navigate = useNavigate();
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [answers, setAnswers] = useState<ProfileAnswers | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [hintsGenerating, setHintsGenerating] = useState(false);
   const [hintsComplete, setHintsComplete] = useState(false);
-  const [step, setStep] = useState<'questions' | 'audio' | 'review'>('questions');
-  const [inputMode, setInputMode] = useState<'text' | 'audio'>('text');
 
   const { myProfile, createOrUpdateProfile, loading } = useProfiles(groupId || '');
 
@@ -43,23 +38,18 @@ export default function CreateProfile() {
   useEffect(() => {
     if (myProfile) {
       setAnswers(myProfile.answers as ProfileAnswers);
-      setAudioUrl(myProfile.audio_url);
-      setTranscript(myProfile.transcript);
     }
   }, [myProfile]);
 
-  const handleQuestionsSubmit = (newAnswers: ProfileAnswers) => {
+  // Submit form and save profile directly
+  const handleQuestionsSubmit = async (newAnswers: ProfileAnswers) => {
+    if (!user || !groupId) return;
+
     setAnswers(newAnswers);
-    setStep('audio');
-  };
-
-  const handleSaveProfile = async () => {
-    if (!answers || !user || !groupId) return;
-
     setSaving(true);
     setHintsGenerating(true);
 
-    const result = await createOrUpdateProfile(user.id, answers, audioUrl || undefined, transcript || undefined);
+    const result = await createOrUpdateProfile(user.id, newAnswers);
 
     setSaving(false);
 
@@ -162,28 +152,6 @@ export default function CreateProfile() {
             <ArrowLeft className="h-4 w-4" />
             Voltar ao grupo
           </Button>
-
-          {/* Mode Toggle */}
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-secondary">
-            <Button
-              variant={inputMode === 'text' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setInputMode('text')}
-              className="gap-1.5 btn-hover-scale"
-            >
-              <FileText className="h-4 w-4" />
-              Texto
-            </Button>
-            <Button
-              variant={inputMode === 'audio' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setInputMode('audio')}
-              className="gap-1.5 btn-hover-scale"
-            >
-              <Mic className="h-4 w-4" />
-              Áudio
-            </Button>
-          </div>
         </div>
 
         {/* Progress Card */}
@@ -213,127 +181,20 @@ export default function CreateProfile() {
               {myProfile ? 'Editar meu perfil' : 'Monte seu perfil secreto'}
             </CardTitle>
             <CardDescription className="text-base">
-              {step === 'questions' && 'Quanto mais sincero e criativo você for, mais divertidas serão as dicas que a IA criará sobre você.'}
-              {step === 'audio' && 'Grave uma mensagem de voz se apresentando (opcional)'}
-              {step === 'review' && 'Revise seu perfil antes de salvar'}
+              Quanto mais sincero e criativo você for, mais divertidas serão as dicas que a IA criará sobre você.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {step === 'questions' && (
-              <ProfileQuestions
-                initialAnswers={answers || undefined}
-                onSubmit={handleQuestionsSubmit}
-              />
-            )}
-
-            {step === 'audio' && (
-              <div className="space-y-6">
-                <AudioRecorder
-                  onTranscript={setTranscript}
-                  onAudioUrl={setAudioUrl}
-                  groupId={groupId || ''}
-                  userId={user.id}
-                />
-
-                {transcript && (
-                  <div className="p-4 bg-secondary rounded-xl">
-                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      Transcrição:
-                    </p>
-                    <p className="text-sm text-muted-foreground italic">{transcript}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep('questions')}
-                    className="btn-hover-scale"
-                  >
-                    Voltar
-                  </Button>
-                  <Button
-                    onClick={() => setStep('review')}
-                    className="flex-1 btn-hover-scale gap-2"
-                  >
-                    {audioUrl ? 'Continuar' : 'Pular áudio'}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {step === 'review' && (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  {answers && PROFILE_QUESTIONS.map((q) => {
-                    const answer = answers[q.id as keyof ProfileAnswers];
-                    if (!answer) return null;
-                    return (
-                      <div key={q.id} className="p-4 rounded-xl bg-secondary/50">
-                        <p className="text-sm font-medium text-muted-foreground mb-1">{q.question}</p>
-                        <p className="font-medium">{answer}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {transcript && (
-                  <div className="p-4 bg-secondary rounded-xl">
-                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <Mic className="h-4 w-4 text-primary" />
-                      Áudio transcrito:
-                    </p>
-                    <p className="text-sm italic text-muted-foreground">{transcript}</p>
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl border-2 border-[#FFD166]/30 bg-[#FFD166]/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FFD166]/20 flex items-center justify-center">
-                      <Sparkles className="h-5 w-5 text-[#FFD166]" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">Pronto para gerar as dicas!</p>
-                      <p className="text-sm text-muted-foreground">
-                        Ao salvar, a IA gerará 3 dicas misteriosas sobre você.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep('audio')}
-                    className="btn-hover-scale"
-                  >
-                    Voltar
-                  </Button>
-                  <Button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="flex-1 btn-glow btn-hover-scale gap-2"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        Salvar perfil e gerar dicas
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <ProfileQuestions
+              initialAnswers={answers || undefined}
+              onSubmit={handleQuestionsSubmit}
+              submitLabel={saving ? 'Salvando...' : 'Salvar perfil e gerar dicas'}
+              submitDisabled={saving}
+            />
           </CardContent>
         </Card>
       </div>
     </AppLayout>
   );
 }
+
