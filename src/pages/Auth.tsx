@@ -125,6 +125,8 @@ const Auth = () => {
 
     try {
       if (mode === "signup") {
+        console.log('[AUTH] Starting signup...', { email: formData.email });
+
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -136,6 +138,7 @@ const Auth = () => {
         });
 
         if (error) {
+          console.error('[AUTH] Signup error:', error);
           if (error.message.includes("already registered")) {
             toast({
               title: "E-mail já cadastrado",
@@ -152,13 +155,45 @@ const Auth = () => {
           return;
         }
 
+        console.log('[AUTH] User created:', { userId: data.user?.id });
+
         // With auto-confirmation enabled, user is immediately logged in
         if (data.user) {
-          toast({
-            title: "Conta criada com sucesso!",
-            description: "Bem-vindo ao Quem Sou Eu IA!",
-          });
-          navigate("/dashboard");
+          // CRITICAL: Ensure session is established before navigation
+          const { data: sessionData } = await supabase.auth.getSession();
+          console.log('[AUTH] Session check:', { hasSession: !!sessionData.session });
+
+          if (sessionData.session) {
+            toast({
+              title: "Conta criada com sucesso!",
+              description: "Bem-vindo ao Quem Sou Eu IA!",
+            });
+            navigate("/dashboard");
+          } else {
+            // Fallback: If no session, try manual login
+            console.log('[AUTH] No session found, attempting manual login...');
+            const { error: loginError } = await supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            });
+
+            if (!loginError) {
+              console.log('[AUTH] Manual login successful');
+              toast({
+                title: "Conta criada com sucesso!",
+                description: "Bem-vindo ao Quem Sou Eu IA!",
+              });
+              navigate("/dashboard");
+            } else {
+              console.error('[AUTH] Manual login failed:', loginError);
+              toast({
+                title: "Erro ao estabelecer sessão",
+                description: "Conta criada, mas houve erro ao fazer login. Por favor, faça login manualmente.",
+                variant: "destructive",
+              });
+              setMode("login");
+            }
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
