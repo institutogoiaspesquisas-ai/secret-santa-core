@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Gift, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useGroups } from "@/hooks/useGroups";
 import type { User, Session } from "@supabase/supabase-js";
 
 // Validation schemas
@@ -21,7 +20,6 @@ const signupSchema = z.object({
   name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres").max(100, "Nome muito longo"),
   email: z.string().email("E-mail inválido"),
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
-  groupCode: z.string().length(6, "O código deve ter 6 caracteres").optional().or(z.literal("")),
 });
 
 const Auth = () => {
@@ -48,13 +46,10 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
 
-  const { joinGroup } = useGroups();
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    groupCode: searchParams.get("groupCode") || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -86,11 +81,6 @@ const Auth = () => {
     const urlMode = searchParams.get("mode");
     if (urlMode === "signup" || urlMode === "login") {
       setMode(urlMode);
-    }
-    const code = searchParams.get("groupCode");
-    if (code) {
-      setFormData(prev => ({ ...prev, groupCode: code }));
-      if (!urlMode) setMode("signup");
     }
   }, [searchParams]);
 
@@ -164,27 +154,10 @@ const Auth = () => {
 
         // With auto-confirmation enabled, user is immediately logged in
         if (data.user) {
-          // If there's a group code, try to join
-          if (formData.groupCode && formData.groupCode.length === 6) {
-            const result = await joinGroup(formData.groupCode);
-            if (result.success) {
-              toast({
-                title: "Conta criada e solicitação enviada!",
-                description: "Você solicitou entrada no grupo com sucesso.",
-              });
-            } else {
-              toast({
-                title: "Conta criada, mas houve um erro ao entrar no grupo",
-                description: result.error,
-                variant: "destructive",
-              });
-            }
-          } else {
-            toast({
-              title: "Conta criada com sucesso!",
-              description: "Bem-vindo ao Quem Sou Eu IA!",
-            });
-          }
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Bem-vindo ao Quem Sou Eu IA!",
+          });
           navigate("/dashboard");
         }
       } else {
@@ -294,28 +267,6 @@ const Auth = () => {
                   <p className="text-sm text-destructive">{errors.email}</p>
                 )}
               </div>
-
-              {mode === "signup" && (
-                <div className="space-y-2">
-                  <Label htmlFor="groupCode">Código do Grupo (Opcional)</Label>
-                  <Input
-                    id="groupCode"
-                    name="groupCode"
-                    type="text"
-                    placeholder="Código de 6 letras"
-                    value={formData.groupCode}
-                    onChange={(e) => {
-                      const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-                      setFormData(prev => ({ ...prev, groupCode: value }));
-                    }}
-                    maxLength={6}
-                    className={`font-mono uppercase tracking-wider ${errors.groupCode ? "border-destructive" : ""}`}
-                  />
-                  {errors.groupCode && (
-                    <p className="text-sm text-destructive">{errors.groupCode}</p>
-                  )}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
