@@ -63,37 +63,53 @@ export function useGroup(groupId: string) {
 
             if (membersError) throw membersError;
 
-            // Buscar perfis de usuário e perfis de jogo para cada membro
-            const membersWithProfiles = await Promise.all(
-                (membersData || []).map(async (member) => {
-                    // Buscar user_profile
-                    const { data: userProfile } = await supabase
-                        .from('user_profiles')
-                        .select('id, full_name, email')
-                        .eq('id', member.user_id)
-                        .maybeSingle();
+            if (!membersData || membersData.length === 0) {
+                setMembers([]);
+                setPendingRequests([]);
+                setLoading(false);
+                return;
+            }
 
-                    // Buscar profile do jogo
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('is_complete, hints_generated')
-                        .eq('group_id', groupId)
-                        .eq('user_id', member.user_id)
-                        .maybeSingle();
+            const userIds = membersData.map(m => m.user_id);
 
-                    return {
-                        id: member.id,
-                        user_id: member.user_id,
-                        role: member.role as 'owner' | 'member',
-                        status: member.status as 'pending' | 'approved' | 'rejected',
-                        created_at: member.created_at,
-                        name: userProfile?.full_name || 'Usuário',
-                        email: userProfile?.email || '',
-                        profileComplete: profile?.is_complete || false,
-                        hintsGenerated: profile?.hints_generated || false,
-                    };
-                })
+            // OPTIMIZATION: Batch fetch all user profiles in one query
+            const { data: userProfiles } = await supabase
+                .from('user_profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+
+            const userProfilesMap = new Map(
+                (userProfiles || []).map(p => [p.id, p])
             );
+
+            // OPTIMIZATION: Batch fetch all game profiles in one query
+            const { data: gameProfiles } = await supabase
+                .from('profiles')
+                .select('user_id, is_complete, hints_generated')
+                .eq('group_id', groupId)
+                .in('user_id', userIds);
+
+            const gameProfilesMap = new Map(
+                (gameProfiles || []).map(p => [p.user_id, p])
+            );
+
+            // Build members with profiles - NO MORE INDIVIDUAL QUERIES
+            const membersWithProfiles = membersData.map((member) => {
+                const userProfile = userProfilesMap.get(member.user_id);
+                const profile = gameProfilesMap.get(member.user_id);
+
+                return {
+                    id: member.id,
+                    user_id: member.user_id,
+                    role: member.role as 'owner' | 'member',
+                    status: member.status as 'pending' | 'approved' | 'rejected',
+                    created_at: member.created_at,
+                    name: userProfile?.full_name || 'Usuário',
+                    email: userProfile?.email || '',
+                    profileComplete: profile?.is_complete || false,
+                    hintsGenerated: profile?.hints_generated || false,
+                };
+            });
 
             // Separar membros aprovados e pendentes
             setMembers(membersWithProfiles.filter(m => m.status === 'approved'));
