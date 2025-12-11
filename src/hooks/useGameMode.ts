@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { GameStatus, HintData, VerifyResult, RevealResult, GamePlayer, GameFeedbackType } from '@/types/game';
+import type { GameStatus, HintData, VerifyResult, RevealResult, GamePlayer, GameFeedbackType, DualRevealResult } from '@/types/game';
 import { getRandomMessage, clearReactionsCache } from '@/constants/gameMessages';
 
 interface UseGameModeProps {
@@ -20,6 +20,10 @@ interface GameModeState {
     revealedPlayer: GamePlayer | null;
     showConfetti: boolean;
     isGameEnded: boolean;
+    // Dual mode state
+    dualLeftHint: HintData | null;
+    dualRightHint: HintData | null;
+    dualRevealResult: DualRevealResult | null;
 }
 
 export function useGameMode({ groupId }: UseGameModeProps) {
@@ -32,6 +36,9 @@ export function useGameMode({ groupId }: UseGameModeProps) {
         revealedPlayer: null,
         showConfetti: false,
         isGameEnded: false,
+        dualLeftHint: null,
+        dualRightHint: null,
+        dualRevealResult: null,
     });
 
     // Track used reaction IDs to avoid repetition within a round
@@ -63,6 +70,8 @@ export function useGameMode({ groupId }: UseGameModeProps) {
                     revealedCount: data.revealedCount,
                     totalPlayers: data.totalPlayers,
                     revealedPlayers: data.revealedPlayers || [],
+                    isDualMode: data.isDualMode || false,
+                    dualMode: data.dualMode || null,
                 },
                 loading: false,
             }));
@@ -258,6 +267,135 @@ export function useGameMode({ groupId }: UseGameModeProps) {
         setState(s => ({ ...s, revealedPlayer: null }));
     }, []);
 
+    const startDualMode = useCallback(async () => {
+        try {
+            setState(s => ({ ...s, loading: true, error: null }));
+            await callGameControl('startDualMode');
+
+            const message = await getRandomMessage('NEW_ROUND');
+
+            setState(s => ({
+                ...s,
+                loading: false,
+                feedback: {
+                    type: 'info',
+                    message,
+                    isVisible: true,
+                },
+            }));
+
+            await fetchStatus();
+        } catch (err) {
+            setState(s => ({
+                ...s,
+                loading: false,
+                error: err instanceof Error ? err.message : 'Erro ao iniciar modo dual'
+            }));
+        }
+    }, [callGameControl, fetchStatus]);
+
+    const showDualHint = useCallback(async (side: 'left' | 'right', hintIndex: number) => {
+        try {
+            setState(s => ({ ...s, loading: true, error: null }));
+            const data = await callGameControl('getDualHint', { side, hintIndex });
+
+            const hintData: HintData = {
+                hint: data.hint,
+                hintIndex: data.hintIndex,
+                message: data.message,
+            };
+
+            setState(s => ({
+                ...s,
+                loading: false,
+                [side === 'left' ? 'dualLeftHint' : 'dualRightHint']: hintData,
+            }));
+
+            await fetchStatus();
+        } catch (err) {
+            setState(s => ({
+                ...s,
+                loading: false,
+                error: err instanceof Error ? err.message : 'Erro ao exibir dica dual'
+            }));
+        }
+    }, [callGameControl, fetchStatus]);
+
+    const verifyDualGuess = useCallback(async (side: 'left' | 'right', guessUserId: string) => {
+        try {
+            setState(s => ({ ...s, loading: true, error: null }));
+            const data = await callGameControl('verifyDualGuess', { side, guessUserId });
+
+            if (data.correct) {
+                const message = await getRandomMessage('CORRECT_GUESS', usedSuccessIds.current);
+
+                setState(s => ({
+                    ...s,
+                    loading: false,
+                    feedback: {
+                        type: 'success',
+                        message,
+                        isVisible: true,
+                    },
+                }));
+            } else {
+                const message = await getRandomMessage('WRONG_GUESS', usedFailIds.current);
+
+                setState(s => ({
+                    ...s,
+                    loading: false,
+                    feedback: {
+                        type: 'error',
+                        message,
+                        isVisible: true,
+                    },
+                }));
+            }
+
+            await fetchStatus();
+            return data.correct;
+        } catch (err) {
+            setState(s => ({
+                ...s,
+                loading: false,
+                error: err instanceof Error ? err.message : 'Erro ao verificar palpite dual'
+            }));
+            return false;
+        }
+    }, [callGameControl, fetchStatus]);
+
+    const revealDual = useCallback(async () => {
+        try {
+            setState(s => ({ ...s, loading: true, error: null }));
+            const data = await callGameControl('revealDual');
+
+            setState(s => ({
+                ...s,
+                loading: false,
+                dualRevealResult: {
+                    leftPlayer: data.leftPlayer,
+                    rightPlayer: data.rightPlayer,
+                    gameEnded: data.gameEnded,
+                    message: data.message,
+                },
+                isGameEnded: data.gameEnded,
+                showConfetti: true,
+            }));
+
+            await fetchStatus();
+        } catch (err) {
+            setState(s => ({
+                ...s,
+                loading: false,
+                error: err instanceof Error ? err.message : 'Erro ao revelar jogadores'
+            }));
+        }
+    }, [callGameControl, fetchStatus]);
+
+    const clearDualReveal = useCallback(() => {
+        setState(s => ({ ...s, dualRevealResult: null }));
+    }, []);
+
     return {
         ...state,
         fetchStatus,
@@ -270,5 +408,11 @@ export function useGameMode({ groupId }: UseGameModeProps) {
         clearFeedback,
         clearConfetti,
         clearRevealedPlayer,
+        // Dual mode functions
+        startDualMode,
+        showDualHint,
+        verifyDualGuess,
+        revealDual,
+        clearDualReveal,
     };
 }

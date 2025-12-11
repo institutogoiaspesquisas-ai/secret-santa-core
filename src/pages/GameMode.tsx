@@ -13,6 +13,8 @@ import { GameFeedback } from '@/components/game/GameFeedback';
 import { PlayerReveal } from '@/components/game/PlayerReveal';
 import { GameSidebar } from '@/components/game/GameSidebar';
 import { ReactionsAdminPanel } from '@/components/game/ReactionsAdminPanel';
+import { DualPlayerPanel } from '@/components/game/DualPlayerPanel';
+import { DualRevealModal } from '@/components/game/DualRevealModal';
 
 interface GroupMember {
     id: string;

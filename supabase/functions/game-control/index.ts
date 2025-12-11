@@ -8,11 +8,12 @@ const corsHeaders = {
 };
 
 interface GameAction {
-  action: 'start' | 'next' | 'getHint' | 'verify' | 'reveal' | 'end' | 'status';
+  action: 'start' | 'next' | 'getHint' | 'verify' | 'reveal' | 'end' | 'status' | 'startDualMode' | 'getDualHint' | 'verifyDualGuess' | 'revealDual';
   groupId: string;
   userId?: string;
   guessUserId?: string;
   hintIndex?: number;
+  side?: 'left' | 'right';
 }
 
 // Função para embaralhar array (Fisher-Yates)
@@ -35,7 +36,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, groupId, userId, guessUserId, hintIndex } = await req.json() as GameAction;
+    const { action, groupId, userId, guessUserId, hintIndex, side } = await req.json() as GameAction;
 
     console.log(`Game control action: ${action} for group: ${groupId}`);
 
@@ -68,7 +69,7 @@ serve(async (req) => {
           .eq('hints_generated', true);
 
         if (profilesError) throw profilesError;
-        
+
         if (!profiles || profiles.length < 2) {
           throw new Error('É necessário pelo menos 2 jogadores com perfis completos para iniciar o jogo');
         }
@@ -94,10 +95,10 @@ serve(async (req) => {
         if (upsertError) throw upsertError;
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: 'O oráculo desperta… o jogo começou!',
-            playerCount: playerOrder.length 
+            playerCount: playerOrder.length
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -106,10 +107,10 @@ serve(async (req) => {
       case 'status': {
         if (!gameState) {
           return new Response(
-            JSON.stringify({ 
-              success: true, 
+            JSON.stringify({
+              success: true,
               inProgress: false,
-              message: 'Nenhum jogo em andamento' 
+              message: 'Nenhum jogo em andamento'
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -129,7 +130,7 @@ serve(async (req) => {
         }));
 
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             success: true,
             inProgress: gameState.in_progress,
             currentPlayerId: gameState.current_player_id,
@@ -137,6 +138,16 @@ serve(async (req) => {
             revealedCount: gameState.revealed_players?.length || 0,
             totalPlayers: gameState.player_order?.length || 0,
             revealedPlayers: mappedRevealedPlayers,
+            // Dual mode info
+            isDualMode: gameState.is_dual_mode || false,
+            dualMode: gameState.is_dual_mode ? {
+              leftPlayerId: gameState.dual_player_left_id,
+              rightPlayerId: gameState.dual_player_right_id,
+              leftHintIndex: gameState.dual_hint_index_left || 0,
+              rightHintIndex: gameState.dual_hint_index_right || 0,
+              hasLeftGuess: !!gameState.dual_guess_left,
+              hasRightGuess: !!gameState.dual_guess_right,
+            } : null,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -170,10 +181,10 @@ serve(async (req) => {
         if (updateError) throw updateError;
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: 'Um novo mistério paira no ar…',
-            remainingPlayers: remainingPlayers.length 
+            remainingPlayers: remainingPlayers.length
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -202,8 +213,8 @@ serve(async (req) => {
           throw new Error('Dicas não encontradas para este jogador');
         }
 
-        const hintText = requestedHintIndex === 1 ? hint.hint1 : 
-                         requestedHintIndex === 2 ? hint.hint2 : hint.hint3;
+        const hintText = requestedHintIndex === 1 ? hint.hint1 :
+          requestedHintIndex === 2 ? hint.hint2 : hint.hint3;
 
         // Atualizar índice de dica atual
         await supabase
@@ -212,8 +223,8 @@ serve(async (req) => {
           .eq('group_id', groupId);
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             hint: hintText,
             hintIndex: requestedHintIndex,
             message: `Dica número ${requestedHintIndex}:`
@@ -230,10 +241,10 @@ serve(async (req) => {
         const isCorrect = guessUserId === gameState.current_player_id;
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             correct: isCorrect,
-            message: isCorrect 
+            message: isCorrect
               ? 'Você decifrou o código humano!'
               : 'Amigo errado! O oráculo gargalha em silêncio.',
           }),
@@ -278,8 +289,8 @@ serve(async (req) => {
           .eq('group_id', groupId);
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             player: {
               id: userProfile?.id,
               name: userProfile?.full_name || 'Jogador Misterioso',
@@ -287,7 +298,7 @@ serve(async (req) => {
               answers: profile?.answers || {},
             },
             gameEnded: allRevealed,
-            message: allRevealed 
+            message: allRevealed
               ? 'Todos os mistérios foram revelados. Que comece a troca de presentes!'
               : 'Este era o ser misterioso descrito pela IA!',
           }),
@@ -305,9 +316,229 @@ serve(async (req) => {
           .eq('group_id', groupId);
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: 'Jogo finalizado!'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'startDualMode': {
+        if (!gameState) {
+          throw new Error('Nenhum jogo em andamento');
+        }
+
+        const remainingPlayers = gameState.player_order.filter(
+          (id: string) => !gameState.revealed_players.includes(id)
+        );
+
+        if (remainingPlayers.length !== 2) {
+          throw new Error('Modo dual requer exatamente 2 jogadores restantes');
+        }
+
+        const { error: updateError } = await supabase
+          .from('game_states')
+          .update({
+            is_dual_mode: true,
+            dual_player_left_id: remainingPlayers[0],
+            dual_player_right_id: remainingPlayers[1],
+            dual_hint_index_left: 0,
+            dual_hint_index_right: 0,
+            dual_guess_left: null,
+            dual_guess_right: null,
+            current_player_id: null,
+            current_hint_index: 0,
+          })
+          .eq('group_id', groupId);
+
+        if (updateError) throw updateError;
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Modo dual ativado! Prepare-se para a rodada final!',
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'getDualHint': {
+        if (!gameState || !gameState.is_dual_mode) {
+          throw new Error('Jogo não está em modo dual');
+        }
+
+        if (!side || (side !== 'left' && side !== 'right')) {
+          throw new Error('Side inválido. Deve ser "left" ou "right"');
+        }
+
+        const hintIdx = hintIndex ?? 1;
+
+        if (hintIdx < 1 || hintIdx > 3) {
+          throw new Error('Índice de dica inválido');
+        }
+
+        const playerId = side === 'left'
+          ? gameState.dual_player_left_id
+          : gameState.dual_player_right_id;
+
+        if (!playerId) {
+          throw new Error('Jogador não encontrado para este lado');
+        }
+
+        const { data: hint, error: hintError } = await supabase
+          .from('hints')
+          .select('hint1, hint2, hint3')
+          .eq('group_id', groupId)
+          .eq('user_id', playerId)
+          .single();
+
+        if (hintError || !hint) {
+          throw new Error('Dicas não encontradas para este jogador');
+        }
+
+        const hintText = hintIdx === 1 ? hint.hint1
+          : hintIdx === 2 ? hint.hint2
+            : hint.hint3;
+
+        const updateField = side === 'left'
+          ? 'dual_hint_index_left'
+          : 'dual_hint_index_right';
+
+        await supabase
+          .from('game_states')
+          .update({ [updateField]: hintIdx })
+          .eq('group_id', groupId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            hint: hintText,
+            side,
+            hintIndex: hintIdx,
+            message: `Dica ${hintIdx} - ${side === 'left' ? 'Esquerda' : 'Direita'}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'verifyDualGuess': {
+        if (!gameState || !gameState.is_dual_mode) {
+          throw new Error('Jogo não está em modo dual');
+        }
+
+        if (!side || (side !== 'left' && side !== 'right')) {
+          throw new Error('Side inválido');
+        }
+
+        if (!guessUserId) {
+          throw new Error('Palpite não fornecido');
+        }
+
+        const correctId = side === 'left'
+          ? gameState.dual_player_left_id
+          : gameState.dual_player_right_id;
+
+        const isCorrect = guessUserId === correctId;
+
+        if (isCorrect) {
+          const updateField = side === 'left'
+            ? 'dual_guess_left'
+            : 'dual_guess_right';
+
+          await supabase
+            .from('game_states')
+            .update({ [updateField]: guessUserId })
+            .eq('group_id', groupId);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            correct: isCorrect,
+            side,
+            message: isCorrect
+              ? 'Você decifrou o código humano!'
+              : 'Amigo errado! O oráculo gargalha em silêncio.',
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'revealDual': {
+        if (!gameState || !gameState.is_dual_mode) {
+          throw new Error('Jogo não está em modo dual');
+        }
+
+        if (!gameState.dual_guess_left || !gameState.dual_guess_right) {
+          throw new Error('Ambos os lados precisam ter palpites corretos antes de revelar');
+        }
+
+        // Buscar dados de ambos os jogadores em paralelo
+        const [leftProfileResult, rightProfileResult] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', gameState.dual_player_left_id)
+            .single(),
+          supabase
+            .from('user_profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', gameState.dual_player_right_id)
+            .single()
+        ]);
+
+        const [leftAnswersResult, rightAnswersResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('answers')
+            .eq('user_id', gameState.dual_player_left_id)
+            .eq('group_id', groupId)
+            .single(),
+          supabase
+            .from('profiles')
+            .select('answers')
+            .eq('user_id', gameState.dual_player_right_id)
+            .eq('group_id', groupId)
+            .single()
+        ]);
+
+        // Finalizar jogo
+        const allRevealed = [
+          ...(gameState.revealed_players || []),
+          gameState.dual_player_left_id!,
+          gameState.dual_player_right_id!
+        ];
+
+        await supabase
+          .from('game_states')
+          .update({
+            revealed_players: allRevealed,
+            in_progress: false,
+            ended_at: new Date().toISOString(),
+            is_dual_mode: false,
+            dual_player_left_id: null,
+            dual_player_right_id: null,
+          })
+          .eq('group_id', groupId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            leftPlayer: {
+              id: leftProfileResult.data?.id,
+              name: leftProfileResult.data?.full_name || 'Jogador Misterioso',
+              avatar: leftProfileResult.data?.avatar_url,
+              answers: leftAnswersResult.data?.answers || {}
+            },
+            rightPlayer: {
+              id: rightProfileResult.data?.id,
+              name: rightProfileResult.data?.full_name || 'Jogador Misterioso',
+              avatar: rightProfileResult.data?.avatar_url,
+              answers: rightAnswersResult.data?.answers || {}
+            },
+            gameEnded: true,
+            message: 'Todos os mistérios foram revelados. Que comece a troca de presentes!'
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
