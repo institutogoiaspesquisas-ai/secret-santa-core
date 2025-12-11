@@ -14,6 +14,7 @@ const JoinGroup = lazy(() => import("./pages/JoinGroup"));
 const CreateProfile = lazy(() => import("./pages/CreateProfile"));
 const ViewProfiles = lazy(() => import("./pages/ViewProfiles"));
 const GameMode = lazy(() => import("./pages/GameMode"));
+const MascotPreview = lazy(() => import("./pages/MascotPreview"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
