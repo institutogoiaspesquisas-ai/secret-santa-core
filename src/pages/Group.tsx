@@ -218,14 +218,7 @@ const Group = () => {
             <UserPlus className="h-4 w-4" />
             Criar meu perfil
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/grupo/${id}/perfis`)}
-            className="btn-hover-scale gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            Ver perfis
-          </Button>
+
           {group.isOwner && (
             <Button
               variant="outline"
