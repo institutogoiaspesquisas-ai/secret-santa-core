@@ -48,16 +48,13 @@ const JoinGroup = () => {
         return;
       }
 
-      // Group exists, redirect to signup with code
+      // Group exists, redirect to login (they can join from dashboard)
       toast({
-        title: "Grupo encontrado! 🎉",
-        description: "Redirecionando para criar sua conta...",
+        title: 'Grupo encontrado!',
+        description: 'Faça login para entrar no grupo. Use o código no dashboard.',
       });
 
-      // Short delay for user to read toast
-      setTimeout(() => {
-        navigate(`/auth?mode=signup&groupCode=${code}`);
-      }, 1000);
+      navigate(`/auth?mode=login`);
 
     } catch (err) {
       console.error("Error checking group:", err);
