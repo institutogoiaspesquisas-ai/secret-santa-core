@@ -19,6 +19,15 @@ export interface GamePlayer {
     answers?: Record<string, string>;
 }
 
+export interface DualModeInfo {
+    leftPlayerId: string;
+    rightPlayerId: string;
+    leftHintIndex: number;
+    rightHintIndex: number;
+    hasLeftGuess: boolean;
+    hasRightGuess: boolean;
+}
+
 export interface GameStatus {
     inProgress: boolean;
     currentPlayerId: string | null;
@@ -26,6 +35,8 @@ export interface GameStatus {
     revealedCount: number;
     totalPlayers: number;
     revealedPlayers: GamePlayer[];
+    isDualMode: boolean;
+    dualMode: DualModeInfo | null;
 }
 
 export interface HintData {
@@ -41,6 +52,13 @@ export interface VerifyResult {
 
 export interface RevealResult {
     player: GamePlayer;
+    gameEnded: boolean;
+    message: string;
+}
+
+export interface DualRevealResult {
+    leftPlayer: GamePlayer;
+    rightPlayer: GamePlayer;
     gameEnded: boolean;
     message: string;
 }
