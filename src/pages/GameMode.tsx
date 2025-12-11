@@ -36,6 +36,9 @@ export default function GameMode() {
     const [awaitingReveal, setAwaitingReveal] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const [showReactionsPanel, setShowReactionsPanel] = useState(false);
+    // Dual mode state
+    const [dualLeftGuess, setDualLeftGuess] = useState<string>('');
+    const [dualRightGuess, setDualRightGuess] = useState<string>('');
 
     const {
         status,
@@ -55,6 +58,15 @@ export default function GameMode() {
         clearFeedback,
         clearConfetti,
         clearRevealedPlayer,
+        // Dual mode
+        dualLeftHint,
+        dualRightHint,
+        dualRevealResult,
+        startDualMode,
+        showDualHint,
+        verifyDualGuess,
+        revealDual,
+        clearDualReveal,
     } = useGameMode({ groupId: groupId || '' });
 
     // Check if user is owner
@@ -165,6 +177,42 @@ export default function GameMode() {
         if (!isGameEnded) {
             nextPlayer();
         }
+    };
+
+    // Auto-detect and start dual mode when 2 players remain
+    useEffect(() => {
+        if (status?.inProgress && !status.isDualMode && !status.currentPlayerId) {
+            const remaining = status.totalPlayers - status.revealedCount;
+            if (remaining === 2) {
+                startDualMode();
+            }
+        }
+    }, [status, startDualMode]);
+
+    // Dual mode handlers
+    const handleDualShowHint = async (side: 'left' | 'right', hintIndex: number) => {
+        await showDualHint(side, hintIndex);
+    };
+
+    const handleDualVerifyGuess = async (side: 'left' | 'right') => {
+        const guessId = side === 'left' ? dualLeftGuess : dualRightGuess;
+        if (!guessId) {
+            toast({
+                title: 'Selecione um jogador',
+                description: `Escolha um nome para o lado ${side === 'left' ? 'esquerdo' : 'direito'} antes de verificar.`,
+            });
+            return;
+        }
+        await verifyDualGuess(side, guessId);
+        if (side === 'left') {
+            setDualLeftGuess('');
+        } else {
+            setDualRightGuess('');
+        }
+    };
+
+    const handleDualReveal = async () => {
+        await revealDual();
     };
 
     // Filter out already revealed players from selection
@@ -442,6 +490,76 @@ export default function GameMode() {
                                 )}
                             </>
                         )}
+
+                        {/* Dual Mode - Two players split screen */}
+                        {status?.isDualMode && status.dualMode && (
+                            <div className="space-y-6">
+                                <Card className="bg-[#1E1E1E]/50 border-[#FFD166]/10">
+                                    <CardHeader>
+                                        <CardTitle className="text-white text-center text-2xl">
+                                            🎭 Rodada Final - Dois Jogadores 🎭
+                                        </CardTitle>
+                                        <p className="text-white/60 text-center mt-2">
+                                            Descubra quem são os dois últimos mistérios!
+                                        </p>
+                                    </CardHeader>
+                                </Card>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <DualPlayerPanel
+                                        side="left"
+                                        currentHintIndex={status.dualMode.leftHintIndex}
+                                        currentHint={dualLeftHint}
+                                        selectedGuess={dualLeftGuess}
+                                        availablePlayers={availablePlayers}
+                                        hasCorrectGuess={status.dualMode.hasLeftGuess}
+                                        onShowHint={(idx) => handleDualShowHint('left', idx)}
+                                        onSelectGuess={setDualLeftGuess}
+                                        onVerifyGuess={() => handleDualVerifyGuess('left')}
+                                        loading={loading}
+                                    />
+
+                                    <DualPlayerPanel
+                                        side="right"
+                                        currentHintIndex={status.dualMode.rightHintIndex}
+                                        currentHint={dualRightHint}
+                                        selectedGuess={dualRightGuess}
+                                        availablePlayers={availablePlayers}
+                                        hasCorrectGuess={status.dualMode.hasRightGuess}
+                                        onShowHint={(idx) => handleDualShowHint('right', idx)}
+                                        onSelectGuess={setDualRightGuess}
+                                        onVerifyGuess={() => handleDualVerifyGuess('right')}
+                                        loading={loading}
+                                    />
+                                </div>
+
+                                {/* Central reveal button */}
+                                {status.dualMode.hasLeftGuess && status.dualMode.hasRightGuess && (
+                                    <div className="text-center mt-8">
+                                        <Card className="bg-[#FFD166]/10 border-[#FFD166]/30 inline-block">
+                                            <CardContent className="pt-6 pb-6 px-12">
+                                                <p className="text-white mb-4 text-lg">
+                                                    Ambos os palpites estão corretos!
+                                                </p>
+                                                <Button
+                                                    onClick={handleDualReveal}
+                                                    disabled={loading}
+                                                    size="lg"
+                                                    className="bg-[#FFD166] text-[#1E1E1E] hover:bg-[#FFD166]/80 text-xl px-12 py-6 gap-3"
+                                                >
+                                                    {loading ? (
+                                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                                    ) : (
+                                                        <Trophy className="h-6 w-6" />
+                                                    )}
+                                                    Revelar Identidades Finais
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar */}
@@ -462,6 +580,14 @@ export default function GameMode() {
             <ReactionsAdminPanel
                 isOpen={showReactionsPanel}
                 onClose={() => setShowReactionsPanel(false)}
+            />
+
+            {/* Dual reveal modal */}
+            <DualRevealModal
+                leftPlayer={dualRevealResult?.leftPlayer || null}
+                rightPlayer={dualRevealResult?.rightPlayer || null}
+                isOpen={!!dualRevealResult}
+                onClose={clearDualReveal}
             />
         </div>
     );
