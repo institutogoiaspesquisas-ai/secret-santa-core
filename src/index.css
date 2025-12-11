@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System - Quem Sou Eu IA
-   Paleta: Azul Elétrico, Dourado, Branco Gelo, Preto Suave
+/* Design System - Amigo Oculto Detetive
+   Paleta: Azul Elétrico, Dourado, Branco Gelo, Preto Suave + Tons de Mistério
 */
 
 @layer base {
@@ -49,6 +49,12 @@
     --electric-blue: 212 100% 59%;
     --ice-white: 220 20% 98%;
     --soft-black: 0 0% 12%;
+
+    /* Detective/Mystery colors */
+    --detective-dark: 230 25% 12%;
+    --mystery-purple: 240 60% 65%;
+    --clue-blue: 212 100% 59%;
+    --evidence-gold: 43 100% 70%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
@@ -96,6 +102,12 @@
     --ice-white: 220 20% 98%;
     --soft-black: 0 0% 12%;
 
+    /* Detective/Mystery colors (dark mode) */
+    --detective-dark: 230 25% 8%;
+    --mystery-purple: 240 60% 65%;
+    --clue-blue: 212 100% 59%;
+    --evidence-gold: 43 100% 70%;
+
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 220 20% 98%;
     --sidebar-primary: 212 100% 59%;
@@ -126,12 +138,17 @@
     @apply shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-shadow;
   }
 
+  /* Detective gradient for hero */
+  .detective-gradient {
+    background: linear-gradient(135deg, hsl(var(--detective-dark)) 0%, hsl(var(--primary)) 100%);
+  }
+
   /* Game mode background */
   .game-bg {
     background-color: #101820;
   }
 
-  /* Hero gradient */
+  /* Hero gradient (legacy) */
   .hero-gradient {
     background: linear-gradient(135deg, #101820 0%, #2E8BFF 100%);
   }
@@ -163,7 +180,7 @@
 
   /* Gold outline button */
   .btn-gold-outline {
-    @apply border-2 border-[#FFD166] text-[#FFD166] bg-transparent hover:bg-[#FFD166]/10 transition-colors;
+    @apply border-2 border-accent text-accent bg-transparent hover:bg-accent/10 transition-colors;
   }
 
   /* Status badges */
@@ -180,12 +197,92 @@
   }
 
   .badge-hints {
-    @apply bg-[#FFD166]/20 text-[#1E1E1E] border border-[#FFD166]/30;
+    @apply bg-accent/20 text-foreground border border-accent/30;
+  }
+
+  /* Detective themed utilities */
+  .clue-glow {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+    animation: clue-pulse 3s ease-in-out infinite;
+  }
+
+  .evidence-card {
+    position: relative;
+    border-left: 4px solid hsl(var(--primary));
+  }
+
+  .evidence-card::before {
+    content: '📁';
+    position: absolute;
+    top: -12px;
+    left: 12px;
+    font-size: 20px;
+    z-index: 10;
+  }
+
+  .mystery-reveal {
+    animation: mystery-reveal 0.5s ease-out forwards;
+  }
+
+  .fingerprint-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5c-13.807 0-25 11.193-25 25s11.193 25 25 25 25-11.193 25-25S43.807 5 30 5zm0 5c11.046 0 20 8.954 20 20s-8.954 20-20 20-20-8.954-20-20 8.954-20 20-20zm0 5c-8.284 0-15 6.716-15 15s6.716 15 15 15 15-6.716 15-15-6.716-15-15-15zm0 5c5.523 0 10 4.477 10 10s-4.477 10-10 10-10-4.477-10-10 4.477-10 10-10z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
+}
+
+/* Detective animations */
+@keyframes clue-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--accent) / 0.5);
+  }
+}
+
+@keyframes mystery-reveal {
+  0% {
+    filter: blur(10px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes detective-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes footstep-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
   }
 }
 
 @keyframes iconPulse {
-
   0%,
   100% {
     transform: scale(1);

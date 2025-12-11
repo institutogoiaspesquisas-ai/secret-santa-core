@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AppLayout } from "@/components/layout";
 import { useGroups, type GroupWithDetails } from "@/hooks/useGroups";
 import {
-  Gift,
+  FolderSearch,
   Plus,
   Users,
   Copy,
@@ -13,13 +13,15 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Lock,
+  Eye,
   ChevronRight,
-  Loader2
+  Loader2,
+  Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CreateGroupModal from "@/components/CreateGroupModal";
 import JoinGroupModal from "@/components/JoinGroupModal";
+import Mascot from "@/components/Mascot";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -61,8 +63,8 @@ const Dashboard = () => {
     if (group.hintsGenerated) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium badge-hints">
-          <Lock className="h-3 w-3" />
-          Dicas geradas
+          <Eye className="h-3 w-3" />
+          Pistas geradas
         </span>
       );
     }
@@ -87,7 +89,6 @@ const Dashboard = () => {
   const handleCreateModalClose = (open: boolean) => {
     setIsCreateModalOpen(open);
     if (!open) {
-      // Refetch groups when modal closes
       refetch();
     }
   };
@@ -95,7 +96,6 @@ const Dashboard = () => {
   const handleJoinModalClose = (open: boolean) => {
     setIsJoinModalOpen(open);
     if (!open) {
-      // Refetch groups when modal closes
       refetch();
     }
   };
@@ -127,9 +127,12 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8 pt-20 lg:pt-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold mb-2">Meus Grupos</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <Search className="h-8 w-8 text-primary" />
+            <h1 className="font-display text-3xl font-bold">Minhas Investigações</h1>
+          </div>
           <p className="text-muted-foreground">
-            Gerencie seus grupos de Amigo Oculto
+            Gerencie seus grupos de Amigo Oculto Detetive
           </p>
         </div>
 
@@ -140,7 +143,7 @@ const Dashboard = () => {
             className="btn-glow btn-hover-scale gap-2"
           >
             <Plus className="h-4 w-4" />
-            Criar Novo Grupo
+            Criar Nova Investigação
           </Button>
           <Button
             variant="outline"
@@ -154,20 +157,22 @@ const Dashboard = () => {
 
         {/* Groups Grid */}
         {groups.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Gift className="h-10 w-10 text-primary" />
+          <Card className="border-dashed border-2 evidence-card">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              {/* Mascot */}
+              <div className="mb-4">
+                <Mascot size="md" />
               </div>
               <h3 className="font-display font-semibold text-xl mb-2">
-                Nenhum grupo ainda
+                Nenhuma investigação ainda
               </h3>
               <p className="text-muted-foreground text-center mb-6 max-w-sm">
-                Crie um novo grupo ou entre em um existente usando o código de convite.
+                Crie um novo grupo ou entre em uma investigação existente usando o código secreto.
               </p>
               <div className="flex gap-3">
-                <Button onClick={() => setIsCreateModalOpen(true)} className="btn-glow btn-hover-scale">
-                  Criar Grupo
+                <Button onClick={() => setIsCreateModalOpen(true)} className="btn-glow btn-hover-scale gap-2">
+                  <Plus className="h-4 w-4" />
+                  Criar Investigação
                 </Button>
                 <Button variant="outline" onClick={() => setIsJoinModalOpen(true)} className="btn-hover-scale">
                   Entrar com Código
@@ -180,7 +185,7 @@ const Dashboard = () => {
             {groups.map((group, index) => (
               <Card
                 key={group.id}
-                className="group relative overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 card-hover-shadow animate-fade-in"
+                className="group relative overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 card-hover-shadow animate-fade-in evidence-card"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {/* Role indicator */}
@@ -192,15 +197,18 @@ const Dashboard = () => {
                       : "bg-secondary text-secondary-foreground"
                     }
                   `}>
-                    {group.role === "owner" ? "Dono" : "Membro"}
+                    {group.role === "owner" ? "Chefe" : "Detetive"}
                   </span>
                 </div>
 
                 <CardHeader className="pb-3 pt-8">
-                  <CardTitle className="font-display text-xl">{group.name}</CardTitle>
+                  <CardTitle className="font-display text-xl flex items-center gap-2">
+                    <FolderSearch className="h-5 w-5 text-primary" />
+                    {group.name}
+                  </CardTitle>
                   <CardDescription className="flex items-center gap-2 mt-1">
                     <Users className="h-4 w-4" />
-                    {group.memberCount} membros
+                    {group.memberCount} detetives
                     {group.role === "owner" && group.pendingCount > 0 && (
                       <span className="text-amber-600">
                         • {group.pendingCount} pendentes
@@ -218,7 +226,7 @@ const Dashboard = () => {
                   {/* Group Code */}
                   <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Código do grupo</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">Código secreto</p>
                       <p className="font-mono font-bold text-lg tracking-wider">
                         {group.code}
                       </p>
@@ -244,7 +252,7 @@ const Dashboard = () => {
                       className="w-full btn-hover-scale gap-2 justify-between"
                       variant="outline"
                     >
-                      <span>{group.role === "owner" ? "Gerenciar Grupo" : "Ver Grupo"}</span>
+                      <span>{group.role === "owner" ? "Gerenciar Investigação" : "Ver Investigação"}</span>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   ) : (
