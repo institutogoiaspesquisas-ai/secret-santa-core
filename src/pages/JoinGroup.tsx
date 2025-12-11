@@ -7,11 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Gift, Users, Loader2, ArrowLeft } from "lucide-react";
 import { isValidGroupCode } from "@/lib/generateCode";
+import { supabase } from "@/integrations/supabase/client";
 
 const JoinGroup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,23 +25,47 @@ const JoinGroup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isValidGroupCode(code)) {
       setError("Código inválido. O código deve ter 6 caracteres.");
       return;
     }
 
     setIsLoading(true);
+    setError("");
 
-    // TODO: Implement with Supabase - check if group exists and create pending request
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Check if group exists
+      const { data, error } = await supabase
+        .from('groups')
+        .select('id')
+        .eq('code', code.toUpperCase())
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        setError("Grupo não encontrado. Verifique o código.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Group exists, redirect to signup with code
       toast({
-        title: "Solicitação enviada! ✉️",
-        description: "Sua solicitação foi enviada ao administrador do grupo. Aguarde aprovação.",
+        title: "Grupo encontrado! 🎉",
+        description: "Redirecionando para criar sua conta...",
       });
-      navigate("/dashboard");
-    }, 1500);
+
+      // Short delay for user to read toast
+      setTimeout(() => {
+        navigate(`/auth?mode=signup&groupCode=${code}`);
+      }, 1000);
+
+    } catch (err) {
+      console.error("Error checking group:", err);
+      setError("Erro ao verificar código. Tente novamente.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,9 +111,8 @@ const JoinGroup = () => {
                   placeholder="Ex: A9F2KQ"
                   value={code}
                   onChange={handleCodeChange}
-                  className={`text-center font-mono text-2xl tracking-[0.5em] uppercase ${
-                    error ? "border-destructive" : ""
-                  }`}
+                  className={`text-center font-mono text-2xl tracking-[0.5em] uppercase ${error ? "border-destructive" : ""
+                    }`}
                   maxLength={6}
                 />
                 {error && (
