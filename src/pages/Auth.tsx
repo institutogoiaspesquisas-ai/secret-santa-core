@@ -135,13 +135,10 @@ const Auth = () => {
 
     try {
       if (mode === "signup") {
-        const redirectUrl = `${window.location.origin}/`;
-
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: redirectUrl,
             data: {
               full_name: formData.name,
             }
@@ -165,12 +162,8 @@ const Auth = () => {
           return;
         }
 
-        if (data.user && !data.session) {
-          toast({
-            title: "Verifique seu e-mail",
-            description: "Enviamos um link de confirmação para seu e-mail.",
-          });
-        } else if (data.session) {
+        // With auto-confirmation enabled, user is immediately logged in
+        if (data.user) {
           // If there's a group code, try to join
           if (formData.groupCode && formData.groupCode.length === 6) {
             const result = await joinGroup(formData.groupCode);
