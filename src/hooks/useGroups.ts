@@ -316,12 +316,58 @@ export function useGroups() {
         }
     };
 
+    const deleteGroup = async (groupId: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            console.log('[GROUPS] Deleting group:', { groupId });
+
+            const user = await getUserWithRetry();
+            if (!user) {
+                return { success: false, error: 'Não autenticado' };
+            }
+
+            // Verify user is owner
+            const { data: group, error: groupError } = await supabase
+                .from('groups')
+                .select('owner_id')
+                .eq('id', groupId)
+                .single();
+
+            if (groupError || !group) {
+                console.error('[GROUPS] Error fetching group:', groupError);
+                return { success: false, error: 'Grupo não encontrado' };
+            }
+
+            if (group.owner_id !== user.id) {
+                return { success: false, error: 'Apenas o administrador pode excluir o grupo' };
+            }
+
+            // Delete the group (CASCADE will delete members, profiles, game_states)
+            const { error: deleteError } = await supabase
+                .from('groups')
+                .delete()
+                .eq('id', groupId);
+
+            if (deleteError) {
+                console.error('[GROUPS] Error deleting group:', deleteError);
+                throw deleteError;
+            }
+
+            console.log('[GROUPS] Group deleted successfully');
+            await fetchGroups();
+            return { success: true };
+        } catch (err) {
+            console.error('[GROUPS] Error in deleteGroup:', err);
+            return { success: false, error: err instanceof Error ? err.message : 'Erro ao excluir grupo' };
+        }
+    };
+
     return {
         groups,
         loading,
         error,
         createGroup,
         joinGroup,
+        deleteGroup,
         refetch: fetchGroups,
     };
 }

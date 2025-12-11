@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppLayout } from "@/components/layout";
 import { useGroup, type MemberWithProfile } from "@/hooks/useGroup";
+import { useGroups } from "@/hooks/useGroups";
 import { useToast } from "@/hooks/use-toast";
 import {
   Copy,
@@ -22,6 +23,7 @@ import {
   MessageCircle,
   AlertCircle,
   Loader2,
+  Trash2,
 } from "lucide-react";
 
 const Group = () => {
@@ -29,6 +31,8 @@ const Group = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [copiedCode, setCopiedCode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     group,
@@ -40,6 +44,8 @@ const Group = () => {
     rejectMember,
     refetch
   } = useGroup(id || '');
+
+  const { deleteGroup } = useGroups();
 
   const handleCopyCode = async () => {
     if (!group) return;
@@ -87,6 +93,28 @@ const Group = () => {
       toast({
         title: "Erro",
         description: "Não foi possível rejeitar a solicitação.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!id) return;
+
+    setDeleting(true);
+    const result = await deleteGroup(id);
+    setDeleting(false);
+
+    if (result.success) {
+      toast({
+        title: "Grupo excluído",
+        description: "O grupo foi excluído com sucesso.",
+      });
+      navigate("/dashboard");
+    } else {
+      toast({
+        title: "Erro ao excluir",
+        description: result.error || "Não foi possível excluir o grupo.",
         variant: "destructive",
       });
     }
@@ -229,7 +257,67 @@ const Group = () => {
               Iniciar Modo Jogo
             </Button>
           )}
+
+          {/* Delete Group - Owner Only */}
+          {group.isOwner && !showDeleteConfirm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
+
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && group.isOwner && (
+          <Card className="border-destructive bg-destructive/5 mb-6 animate-fade-in">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                  <div>
+                    <p className="font-medium text-destructive">Excluir grupo?</p>
+                    <p className="text-sm text-muted-foreground">
+                      Esta ação é irreversível. Todos os membros e perfis serão removidos.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteGroup}
+                    disabled={deleting}
+                    className="gap-2"
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Excluindo...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        Confirmar Exclusão
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="members" className="animate-fade-in">
