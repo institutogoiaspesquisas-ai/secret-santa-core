@@ -126,46 +126,52 @@ export function useGroups() {
                 (groupsData || []).map(g => [g.id, g as Group])
             );
 
-            // Para cada membership, buscar contagens e status do perfil
-            const groupsWithDetails = await Promise.all(
-                memberships
-                    .filter(m => groupsMap.has(m.group_id))
-                    .map(async (membership) => {
-                        const group = groupsMap.get(membership.group_id)!;
+            // OPTIMIZATION: Fetch all member counts in one query per status
+            const { data: allMembers } = await supabase
+                .from('group_members')
+                .select('group_id, status')
+                .in('group_id', groupIds);
 
-                        // Contar membros aprovados
-                        const { count: memberCount } = await supabase
-                            .from('group_members')
-                            .select('*', { count: 'exact', head: true })
-                            .eq('group_id', group.id)
-                            .eq('status', 'approved');
+            // Count members per group
+            const memberCountMap = new Map<string, number>();
+            const pendingCountMap = new Map<string, number>();
 
-                        // Contar pendentes (apenas para owners)
-                        const { count: pendingCount } = await supabase
-                            .from('group_members')
-                            .select('*', { count: 'exact', head: true })
-                            .eq('group_id', group.id)
-                            .eq('status', 'pending');
+            (allMembers || []).forEach(m => {
+                if (m.status === 'approved') {
+                    memberCountMap.set(m.group_id, (memberCountMap.get(m.group_id) || 0) + 1);
+                } else if (m.status === 'pending') {
+                    pendingCountMap.set(m.group_id, (pendingCountMap.get(m.group_id) || 0) + 1);
+                }
+            });
 
-                        // Verificar se o usuário tem perfil completo
-                        const { data: profile } = await supabase
-                            .from('profiles')
-                            .select('is_complete, hints_generated')
-                            .eq('group_id', group.id)
-                            .eq('user_id', user.id)
-                            .maybeSingle();
+            // OPTIMIZATION: Fetch all user profiles in one query
+            const { data: allProfiles } = await supabase
+                .from('profiles')
+                .select('group_id, is_complete, hints_generated')
+                .in('group_id', groupIds)
+                .eq('user_id', user.id);
 
-                        return {
-                            ...group,
-                            role: membership.role as 'owner' | 'member',
-                            status: membership.status as 'pending' | 'approved' | 'rejected',
-                            memberCount: memberCount || 0,
-                            pendingCount: pendingCount || 0,
-                            profileComplete: profile?.is_complete || false,
-                            hintsGenerated: profile?.hints_generated || false,
-                        };
-                    })
+            const profilesMap = new Map<string, { is_complete: boolean; hints_generated: boolean }>(
+                (allProfiles || []).map(p => [p.group_id, { is_complete: p.is_complete, hints_generated: p.hints_generated }])
             );
+
+            // Build groups with details - NO MORE INDIVIDUAL QUERIES
+            const groupsWithDetails = memberships
+                .filter(m => groupsMap.has(m.group_id))
+                .map((membership) => {
+                    const group = groupsMap.get(membership.group_id)!;
+                    const profile = profilesMap.get(group.id);
+
+                    return {
+                        ...group,
+                        role: membership.role as 'owner' | 'member',
+                        status: membership.status as 'pending' | 'approved' | 'rejected',
+                        memberCount: memberCountMap.get(group.id) || 0,
+                        pendingCount: pendingCountMap.get(group.id) || 0,
+                        profileComplete: profile?.is_complete || false,
+                        hintsGenerated: profile?.hints_generated || false,
+                    };
+                });
 
             setGroups(groupsWithDetails);
         } catch (err) {
