@@ -1,0 +1,219 @@
+/* Variáveis CSS para personalização */
+:root {
+  /* Dimensões */
+  --mascot-size: 200px;
+  --halo-size: 240px;
+  --eye-width: 24px;
+  --eye-height: 40px;
+  
+  /* Cores */
+  --mascot-body-color: #000000;
+  --eye-color: #FFFFFF;
+  --halo-cyan: #00D4FF;
+  --halo-blue: #4D9FFF;
+  --halo-violet: #9966FF;
+  --halo-magenta: #CC66FF;
+  --halo-pink: #FF66CC;
+  
+  /* Glow */
+  --glow-cyan: rgba(0, 212, 255, 0.5);
+  --glow-violet: rgba(153, 102, 255, 0.4);
+  --glow-pink: rgba(255, 102, 204, 0.3);
+  
+  /* Animações */
+  --breathe-duration: 4s;
+  --halo-rotation-duration: 10s;
+  --eye-transition: 0.15s;
+}
+
+/* Container principal */
+.mascot-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  /* background: #000000; Removed to be transparent/fit parent */
+  background: transparent;
+  width: 100%;
+}
+
+.mascot-container {
+  position: relative;
+  width: var(--mascot-size);
+  height: var(--mascot-size);
+  cursor: pointer;
+}
+
+/* Corpo da mascote */
+.mascot-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--mascot-body-color);
+  border-radius: 50%;
+  z-index: 2;
+  animation: mascot-breathe var(--breathe-duration) ease-in-out infinite;
+  box-shadow: inset 0 -10px 30px rgba(255, 255, 255, 0.03);
+}
+
+/* Olhos */
+.mascot-eye {
+  position: absolute;
+  width: var(--eye-width);
+  height: var(--eye-height);
+  background: var(--eye-color);
+  border-radius: 50%;
+  top: 35%;
+  transition: transform var(--eye-transition) ease-out;
+}
+
+.mascot-eye--left {
+  left: 30%; /* Adjusted to match JS logic better or stick to 28% as in provided CSS? Provided CSS says 28% in compiled but 30% in specs. Let's stick to compiled. */
+  left: 28%;
+}
+
+.mascot-eye--right {
+  right: 28%;
+}
+
+/* Halo */
+.mascot-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--halo-size);
+  height: var(--halo-size);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1;
+  animation: 
+    halo-rotate var(--halo-rotation-duration) linear infinite,
+    halo-pulse 3s ease-in-out infinite;
+  
+  background: conic-gradient(
+    from 0deg,
+    var(--halo-cyan) 0deg,
+    var(--halo-blue) 60deg,
+    var(--halo-violet) 120deg,
+    var(--halo-magenta) 180deg,
+    var(--halo-pink) 240deg,
+    var(--halo-violet) 300deg,
+    var(--halo-cyan) 360deg
+  );
+  
+  -webkit-mask: radial-gradient(transparent 58%, black 62%, black 70%, transparent 74%);
+  mask: radial-gradient(transparent 58%, black 62%, black 70%, transparent 74%);
+  
+  filter: blur(8px);
+}
+
+/* Glow effect */
+.mascot-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--halo-size) + 40px);
+  height: calc(var(--halo-size) + 40px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--halo-cyan) 0deg,
+    var(--halo-blue) 60deg,
+    var(--halo-violet) 120deg,
+    var(--halo-magenta) 180deg,
+    var(--halo-pink) 240deg,
+    var(--halo-violet) 300deg,
+    var(--halo-cyan) 360deg
+  );
+  -webkit-mask: radial-gradient(transparent 50%, black 52%, black 54%, transparent 56%);
+  mask: radial-gradient(transparent 50%, black 52%, black 54%, transparent 56%);
+  filter: blur(30px);
+  opacity: 0.6;
+  z-index: 0;
+  animation: halo-rotate var(--halo-rotation-duration) linear infinite;
+}
+
+/* Lens flare / reflexo */
+.mascot-container::after {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  right: 5%;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(150, 220, 255, 0.3) 0%,
+    rgba(100, 180, 255, 0.1) 40%,
+    transparent 70%
+  );
+  filter: blur(10px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Keyframes */
+@keyframes mascot-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes halo-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes halo-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 45%, 55%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+}
+
+/* Estados de animação de pulo */
+@keyframes jump {
+  0% { transform: scaleY(1) scaleX(1) translateY(0); }
+  10% { transform: scaleY(0.85) scaleX(1.15) translateY(0); }
+  35% { transform: scaleY(1.1) scaleX(0.95) translateY(-80px); }
+  50% { transform: scaleY(1.05) scaleX(1) translateY(-100px); }
+  70% { transform: scaleY(0.95) scaleX(1.02) translateY(-40px); }
+  85% { transform: scaleY(0.9) scaleX(1.1) translateY(0); }
+  100% { transform: scaleY(1) scaleX(1) translateY(0); }
+}
+
+.mascot-body.jumping {
+  animation: jump 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes eye-excitement {
+  0%, 100% { transform: scaleY(1); }
+  10% { transform: scaleY(0.7); }
+  35%, 60% { transform: scaleY(1.2); }
+  85% { transform: scaleY(0.9); }
+}
+
+.mascot-body.jumping .mascot-eye {
+  animation: eye-excitement 0.9s ease-out;
+}
+
+/* Halo animation for jumping */
+@keyframes halo-excitement {
+  0%, 100% { 
+    filter: blur(8px); /* Default blur from .mascot-halo */
+    opacity: 0.9;
+  }
+  50% { 
+    filter: blur(25px);
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.1);
+  }
+}
+
+.mascot-halo.jumping-halo {
+  animation: halo-excitement 0.9s ease-out;
+}
