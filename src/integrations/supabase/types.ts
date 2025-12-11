@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_states: {
+        Row: {
+          created_at: string | null
+          current_hint_index: number | null
+          current_player_id: string | null
+          dual_guess_left: string | null
+          dual_guess_right: string | null
+          dual_hint_index_left: number | null
+          dual_hint_index_right: number | null
+          dual_player_left_id: string | null
+          dual_player_right_id: string | null
+          ended_at: string | null
+          group_id: string
+          id: string
+          in_progress: boolean | null
+          is_dual_mode: boolean | null
+          player_order: string[]
+          revealed_players: string[]
+          started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_hint_index?: number | null
+          current_player_id?: string | null
+          dual_guess_left?: string | null
+          dual_guess_right?: string | null
+          dual_hint_index_left?: number | null
+          dual_hint_index_right?: number | null
+          dual_player_left_id?: string | null
+          dual_player_right_id?: string | null
+          ended_at?: string | null
+          group_id: string
+          id?: string
+          in_progress?: boolean | null
+          is_dual_mode?: boolean | null
+          player_order?: string[]
+          revealed_players?: string[]
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_hint_index?: number | null
+          current_player_id?: string | null
+          dual_guess_left?: string | null
+          dual_guess_right?: string | null
+          dual_hint_index_left?: number | null
+          dual_hint_index_right?: number | null
+          dual_player_left_id?: string | null
+          dual_player_right_id?: string | null
+          ended_at?: string | null
+          group_id?: string
+          id?: string
+          in_progress?: boolean | null
+          is_dual_mode?: boolean | null
+          player_order?: string[]
+          revealed_players?: string[]
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_states_dual_guess_left_fkey"
+            columns: ["dual_guess_left"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_states_dual_guess_right_fkey"
+            columns: ["dual_guess_right"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_states_dual_player_left_id_fkey"
+            columns: ["dual_player_left_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_states_dual_player_right_id_fkey"
+            columns: ["dual_player_right_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_states_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string | null
@@ -173,6 +272,30 @@ export type Database = {
           },
         ]
       }
+      reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          text: string
+          type: Database["public"]["Enums"]["reaction_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          text: string
+          type: Database["public"]["Enums"]["reaction_type"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          text?: string
+          type?: Database["public"]["Enums"]["reaction_type"]
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
@@ -205,6 +328,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_group_by_code: {
+        Args: { code_input: string }
+        Returns: {
+          id: string
+          name: string
+          owner_id: string
+        }[]
+      }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
@@ -217,6 +348,7 @@ export type Database = {
     Enums: {
       group_role: "owner" | "member"
       member_status: "pending" | "approved" | "rejected"
+      reaction_type: "success" | "fail"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -346,6 +478,7 @@ export const Constants = {
     Enums: {
       group_role: ["owner", "member"],
       member_status: ["pending", "approved", "rejected"],
+      reaction_type: ["success", "fail"],
     },
   },
 } as const
