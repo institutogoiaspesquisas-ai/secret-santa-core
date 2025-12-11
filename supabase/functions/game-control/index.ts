@@ -121,6 +121,13 @@ serve(async (req) => {
           .select('id, full_name, avatar_url')
           .in('id', gameState.revealed_players || []);
 
+        // Map full_name to name for frontend compatibility
+        const mappedRevealedPlayers = (revealedProfiles || []).map(profile => ({
+          id: profile.id,
+          name: profile.full_name || 'Jogador Misterioso',
+          avatar: profile.avatar_url,
+        }));
+
         return new Response(
           JSON.stringify({ 
             success: true,
@@ -129,7 +136,7 @@ serve(async (req) => {
             currentHintIndex: gameState.current_hint_index,
             revealedCount: gameState.revealed_players?.length || 0,
             totalPlayers: gameState.player_order?.length || 0,
-            revealedPlayers: revealedProfiles || [],
+            revealedPlayers: mappedRevealedPlayers,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
