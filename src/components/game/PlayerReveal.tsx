@@ -15,7 +15,8 @@ interface PlayerRevealProps {
 export function PlayerReveal({ player, isOpen, onClose, onNextPlayer, isGameEnded }: PlayerRevealProps) {
     if (!player) return null;
 
-    const getInitials = (name: string) => {
+    const getInitials = (name?: string | null) => {
+        if (!name) return '?';
         return name
             .split(' ')
             .map((n) => n[0])
