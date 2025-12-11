@@ -63,12 +63,6 @@ const Index = () => {
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Link to="/entrar-grupo">
-                  <Button size="lg" variant="outline" className="btn-gold-outline btn-hover-scale gap-2 text-base px-8 h-12">
-                    <Users className="h-5 w-5" />
-                    Entrar com Código de Grupo
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>
