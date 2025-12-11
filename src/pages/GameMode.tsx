@@ -94,22 +94,34 @@ export default function GameMode() {
         fetchStatus();
 
         const fetchMembers = async () => {
-            const { data } = await supabase
+            // 1. Fetch group members
+            const { data: membersData } = await supabase
                 .from('group_members')
-                .select(`
-          id,
-          user_id,
-          user_profiles:user_id (
-            id,
-            full_name
-          )
-        `)
+                .select('id, user_id')
                 .eq('group_id', groupId)
                 .eq('status', 'approved');
 
-            if (data) {
-                setMembers(data as unknown as GroupMember[]);
-            }
+            if (!membersData) return;
+
+            // 2. Fetch user profiles for these members
+            const userIds = membersData.map(m => m.user_id);
+            const { data: profilesData } = await supabase
+                .from('user_profiles')
+                .select('id, full_name')
+                .in('id', userIds);
+
+            // 3. Map profiles to members
+            const profilesMap = new Map(
+                profilesData?.map(p => [p.id, p]) || []
+            );
+
+            const joinedMembers = membersData.map(member => ({
+                id: member.id,
+                user_id: member.user_id,
+                user_profiles: profilesMap.get(member.user_id) || null
+            }));
+
+            setMembers(joinedMembers);
         };
 
         fetchMembers();
