@@ -35,11 +35,9 @@ const JoinGroup = () => {
     setError("");
 
     try {
-      // Check if group exists
+      // Check if group exists using RPC (bypassing RLS)
       const { data, error } = await supabase
-        .from('groups')
-        .select('id')
-        .eq('code', code.toUpperCase())
+        .rpc('get_group_by_code', { code_input: code })
         .maybeSingle();
 
       if (error) throw error;
