@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/grupo/:groupId/perfis" element={<ViewProfiles />} />
             <Route path="/grupo/:groupId/jogo" element={<GameMode />} />
             <Route path="/entrar-grupo" element={<JoinGroup />} />
+            <Route path="/mascot-preview" element={<MascotPreview />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, Sparkles, Gift, ArrowRight, MessageCircle, Lock, Gamepad2, Zap, Brain, Shield } from "lucide-react";
+import Mascot from "@/components/Mascot";
 
 const Index = () => {
   return (
@@ -38,31 +39,48 @@ const Index = () => {
           </div>
 
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center animate-fade-in">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFD166]/20 text-[#FFD166] mb-8">
-                <Sparkles className="h-4 w-4 icon-pulse" />
-                <span className="text-sm font-medium">Amigo Oculto com Identidade Oculta</span>
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
+              <div className="flex-1 text-center lg:text-left animate-fade-in">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FFD166]/20 text-[#FFD166] mb-8">
+                  <Sparkles className="h-4 w-4 icon-pulse" />
+                  <span className="text-sm font-medium">Amigo Oculto com Identidade Oculta</span>
+                </div>
+
+                {/* Title */}
+                <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-white">
+                  Quem Sou Eu IA
+                </h1>
+
+                {/* Subtitle */}
+                <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto lg:mx-0 mb-10 font-light">
+                  O Amigo Oculto em que a IA descreve você melhor do que seus amigos.
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  <Link to="/auth?mode=signup">
+                    <Button size="lg" className="bg-primary hover:bg-primary/90 btn-hover-scale gap-2 text-base px-8 h-12">
+                      Criar Conta
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
-              {/* Title */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-white">
-                Quem Sou Eu IA
-              </h1>
+              {/* Mascot Display */}
+              <div className="flex-1 flex justify-center items-center relative animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <div className="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px] flex items-center justify-center">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-[80px] animate-pulse-soft"></div>
+                  <div className="relative z-10 scale-125 hover:scale-150 transition-transform duration-500 cursor-pointer">
+                    <Mascot />
+                  </div>
 
-              {/* Subtitle */}
-              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto mb-10 font-light">
-                O Amigo Oculto em que a IA descreve você melhor do que seus amigos.
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/auth?mode=signup">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90 btn-hover-scale gap-2 text-base px-8 h-12">
-                    Criar Conta
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                </Link>
+                  {/* Floating Elements/Context */}
+                  <div className="absolute -top-10 -right-10 bg-card/10 backdrop-blur-md border border-white/10 p-4 rounded-xl rotate-12 hidden md:block">
+                    <p className="text-sm font-medium text-white">"Me clique!"</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
