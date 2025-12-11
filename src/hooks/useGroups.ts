@@ -175,11 +175,9 @@ export function useGroups() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Não autenticado');
 
-            // Verificar se o grupo existe
+            // Verificar se o grupo existe (via RPC para bypass RLS)
             const { data: group, error: groupError } = await supabase
-                .from('groups')
-                .select('id')
-                .eq('code', code.toUpperCase())
+                .rpc('get_group_by_code', { code_input: code })
                 .maybeSingle();
 
             if (groupError) throw groupError;
