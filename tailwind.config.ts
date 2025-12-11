@@ -51,6 +51,19 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           foreground: "hsl(var(--gold-foreground))",
         },
+        // Detective theme colors
+        detective: {
+          dark: "hsl(var(--detective-dark))",
+        },
+        mystery: {
+          purple: "hsl(var(--mystery-purple))",
+        },
+        clue: {
+          blue: "hsl(var(--clue-blue))",
+        },
+        evidence: {
+          gold: "hsl(var(--evidence-gold))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -101,6 +114,14 @@ export default {
           "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
           "20%, 40%, 60%, 80%": { transform: "translateX(4px)" },
         },
+        "clue-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--accent) / 0.3)" },
+          "50%": { boxShadow: "0 0 30px hsl(var(--accent) / 0.5)" },
+        },
+        "mystery-reveal": {
+          from: { filter: "blur(10px)", opacity: "0" },
+          to: { filter: "blur(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +131,8 @@ export default {
         "scale-in": "scale-in 0.2s ease-out",
         float: "float 3s ease-in-out infinite",
         shake: "shake 0.8s ease-in-out",
+        "clue-pulse": "clue-pulse 3s ease-in-out infinite",
+        "mystery-reveal": "mystery-reveal 0.5s ease-out forwards",
       },
     },
   },

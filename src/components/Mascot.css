@@ -1,6 +1,6 @@
 /* Variáveis CSS para personalização */
 :root {
-  /* Dimensões */
+  /* Dimensões base (para tamanho lg) */
   --mascot-size: 200px;
   --halo-size: 240px;
   --eye-width: 24px;
@@ -31,16 +31,39 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
-  /* background: #000000; Removed to be transparent/fit parent */
   background: transparent;
   width: 100%;
 }
 
+/* Tamanhos */
+.mascot-wrapper.mascot-size-lg {
+  min-height: 320px;
+  --current-mascot-size: 200px;
+  --current-halo-size: 240px;
+  --current-eye-width: 24px;
+  --current-eye-height: 40px;
+}
+
+.mascot-wrapper.mascot-size-md {
+  min-height: 200px;
+  --current-mascot-size: 120px;
+  --current-halo-size: 150px;
+  --current-eye-width: 16px;
+  --current-eye-height: 26px;
+}
+
+.mascot-wrapper.mascot-size-sm {
+  min-height: 120px;
+  --current-mascot-size: 80px;
+  --current-halo-size: 100px;
+  --current-eye-width: 10px;
+  --current-eye-height: 16px;
+}
+
 .mascot-container {
   position: relative;
-  width: var(--mascot-size);
-  height: var(--mascot-size);
+  width: var(--current-mascot-size, var(--mascot-size));
+  height: var(--current-mascot-size, var(--mascot-size));
   cursor: pointer;
 }
 
@@ -59,8 +82,8 @@
 /* Olhos */
 .mascot-eye {
   position: absolute;
-  width: var(--eye-width);
-  height: var(--eye-height);
+  width: var(--current-eye-width, var(--eye-width));
+  height: var(--current-eye-height, var(--eye-height));
   background: var(--eye-color);
   border-radius: 50%;
   top: 35%;
@@ -68,7 +91,6 @@
 }
 
 .mascot-eye--left {
-  left: 30%; /* Adjusted to match JS logic better or stick to 28% as in provided CSS? Provided CSS says 28% in compiled but 30% in specs. Let's stick to compiled. */
   left: 28%;
 }
 
@@ -81,8 +103,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: var(--halo-size);
-  height: var(--halo-size);
+  width: var(--current-halo-size, var(--halo-size));
+  height: var(--current-halo-size, var(--halo-size));
   transform: translate(-50%, -50%);
   border-radius: 50%;
   z-index: 1;
@@ -113,8 +135,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: calc(var(--halo-size) + 40px);
-  height: calc(var(--halo-size) + 40px);
+  width: calc(var(--current-halo-size, var(--halo-size)) + 40px);
+  height: calc(var(--current-halo-size, var(--halo-size)) + 40px);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: conic-gradient(
@@ -152,6 +174,17 @@
   filter: blur(10px);
   z-index: 0;
   pointer-events: none;
+}
+
+/* Ajustar lens flare para tamanhos menores */
+.mascot-size-md .mascot-container::after {
+  width: 50px;
+  height: 50px;
+}
+
+.mascot-size-sm .mascot-container::after {
+  width: 30px;
+  height: 30px;
 }
 
 /* Keyframes */
@@ -204,7 +237,7 @@
 /* Halo animation for jumping */
 @keyframes halo-excitement {
   0%, 100% { 
-    filter: blur(8px); /* Default blur from .mascot-halo */
+    filter: blur(8px);
     opacity: 0.9;
   }
   50% { 
@@ -216,4 +249,33 @@
 
 .mascot-halo.jumping-halo {
   animation: halo-excitement 0.9s ease-out;
+}
+
+/* Ajustar jump para tamanhos menores */
+.mascot-size-md .mascot-body.jumping {
+  animation-name: jump-md;
+}
+
+.mascot-size-sm .mascot-body.jumping {
+  animation-name: jump-sm;
+}
+
+@keyframes jump-md {
+  0% { transform: scaleY(1) scaleX(1) translateY(0); }
+  10% { transform: scaleY(0.85) scaleX(1.15) translateY(0); }
+  35% { transform: scaleY(1.1) scaleX(0.95) translateY(-50px); }
+  50% { transform: scaleY(1.05) scaleX(1) translateY(-60px); }
+  70% { transform: scaleY(0.95) scaleX(1.02) translateY(-25px); }
+  85% { transform: scaleY(0.9) scaleX(1.1) translateY(0); }
+  100% { transform: scaleY(1) scaleX(1) translateY(0); }
+}
+
+@keyframes jump-sm {
+  0% { transform: scaleY(1) scaleX(1) translateY(0); }
+  10% { transform: scaleY(0.85) scaleX(1.15) translateY(0); }
+  35% { transform: scaleY(1.1) scaleX(0.95) translateY(-30px); }
+  50% { transform: scaleY(1.05) scaleX(1) translateY(-40px); }
+  70% { transform: scaleY(0.95) scaleX(1.02) translateY(-15px); }
+  85% { transform: scaleY(0.9) scaleX(1.1) translateY(0); }
+  100% { transform: scaleY(1) scaleX(1) translateY(0); }
 }

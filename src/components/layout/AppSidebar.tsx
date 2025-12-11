@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-    Gift,
+    Search,
     LayoutDashboard,
     Plus,
     Users,
@@ -32,10 +32,9 @@ export function AppSidebar({ className }: AppSidebarProps) {
         try {
             await supabase.auth.signOut();
             toast({
-                title: "Até logo! 👋",
+                title: "Até logo! 🔍",
                 description: "Você saiu da sua conta.",
             });
-            // Force full page reload to clear all state
             window.location.href = "/";
         } catch {
             toast({
@@ -51,7 +50,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
     const navItems = [
         {
             href: "/dashboard",
-            label: "Meus Grupos",
+            label: "Minhas Investigações",
             icon: LayoutDashboard,
         },
     ];
@@ -89,13 +88,16 @@ export function AppSidebar({ className }: AppSidebarProps) {
                     <div className="h-16 flex items-center justify-between px-4 border-b border-border">
                         {!isCollapsed && (
                             <Link to="/dashboard" className="flex items-center gap-2">
-                                <Gift className="h-6 w-6 text-primary" />
-                                <span className="font-display font-bold text-lg">Quem Sou Eu IA</span>
+                                <Search className="h-6 w-6 text-primary" />
+                                <span className="font-display font-bold text-sm leading-tight">
+                                    Amigo Oculto<br />
+                                    <span className="text-primary">Detetive</span>
+                                </span>
                             </Link>
                         )}
                         {isCollapsed && (
                             <Link to="/dashboard" className="mx-auto">
-                                <Gift className="h-6 w-6 text-primary" />
+                                <Search className="h-6 w-6 text-primary" />
                             </Link>
                         )}
                         <Button
@@ -136,7 +138,7 @@ export function AppSidebar({ className }: AppSidebarProps) {
                                 onClick={() => setIsCreateModalOpen(true)}
                             >
                                 <Plus className="h-5 w-5 shrink-0" />
-                                {!isCollapsed && <span>Criar Grupo</span>}
+                                {!isCollapsed && <span>Criar Investigação</span>}
                             </Button>
 
                             <Button

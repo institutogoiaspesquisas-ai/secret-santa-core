@@ -2,52 +2,50 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import './Mascot.css';
 
-const Mascot = () => {
+interface MascotProps {
+    size?: 'sm' | 'md' | 'lg';
+}
+
+const Mascot = ({ size = 'lg' }: MascotProps) => {
     const mascotBodyRef = useRef<HTMLDivElement>(null);
     const mascotHaloRef = useRef<HTMLDivElement>(null);
     const eyeLeftRef = useRef<HTMLDivElement>(null);
     const eyeRightRef = useRef<HTMLDivElement>(null);
 
-    // State refs to avoid stale closures in timeouts/event listeners
     const isUserInteractingRef = useRef(false);
     const idleTimeoutRef = useRef<NodeJS.Timeout>();
     const blinkTimeoutRef = useRef<NodeJS.Timeout>();
 
     const [isJumping, setIsJumping] = useState(false);
 
-    // Helper to move eyes
     const moveEyes = useCallback((x: number, y: number) => {
         if (eyeLeftRef.current) eyeLeftRef.current.style.transform = `translate(${x}px, ${y}px)`;
         if (eyeRightRef.current) eyeRightRef.current.style.transform = `translate(${x}px, ${y}px)`;
     }, []);
 
-    // Idle looking behavior
     const startIdleLooking = useCallback(() => {
         if (isUserInteractingRef.current) return;
 
         const randomLook = () => {
             if (isUserInteractingRef.current) return;
 
-            const randomX = (Math.random() - 0.5) * 24; // -12 to 12
-            const randomY = (Math.random() - 0.5) * 16; // -8 to 8
+            const randomX = (Math.random() - 0.5) * 24;
+            const randomY = (Math.random() - 0.5) * 16;
 
             moveEyes(randomX, randomY);
 
-            // Return to center after random delay
             setTimeout(() => {
                 if (!isUserInteractingRef.current) {
                     moveEyes(0, 0);
                 }
             }, 1500 + Math.random() * 1000);
 
-            // Schedule next look
             idleTimeoutRef.current = setTimeout(randomLook, 4000 + Math.random() * 4000);
         };
 
         idleTimeoutRef.current = setTimeout(randomLook, 2000);
     }, [moveEyes]);
 
-    // Blinking logic
     useEffect(() => {
         const blink = () => {
             if (eyeLeftRef.current) {
@@ -78,7 +76,6 @@ const Mascot = () => {
         };
     }, []);
 
-    // Start idle loop
     useEffect(() => {
         startIdleLooking();
 
@@ -87,7 +84,6 @@ const Mascot = () => {
         };
     }, [startIdleLooking]);
 
-    // Event listeners for mouse tracking
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             isUserInteractingRef.current = true;
@@ -110,7 +106,6 @@ const Mascot = () => {
 
             moveEyes(moveX, moveY);
 
-            // Resume idle after 2 seconds
             idleTimeoutRef.current = setTimeout(() => {
                 isUserInteractingRef.current = false;
                 moveEyes(0, 0);
@@ -119,16 +114,7 @@ const Mascot = () => {
         };
 
         const handleMouseLeave = () => {
-            // Keep eyes centered if mouse leaves? Or resume idle?
-            // User script has logic to reset when mouse leaves
-            /*
-            document.addEventListener('mouseleave', () => {
-                eyes.forEach(eye => {
-                    eye.style.transform = 'translate(0, 0)';
-                });
-            });
-            */
-            // But usually this applies when mouse leaves window. Let's stick to global tracking.
+            // Keep eyes centered if mouse leaves
         };
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -142,17 +128,14 @@ const Mascot = () => {
 
 
     const triggerJump = () => {
-        // Prevent double jump
         if (isJumping) return;
 
         setIsJumping(true);
 
-        // Confetti at peak (approx 300-350ms)
         setTimeout(() => {
             launchConfetti();
         }, 350);
 
-        // Reset after animation (900ms)
         setTimeout(() => {
             setIsJumping(false);
         }, 900);
@@ -163,7 +146,6 @@ const Mascot = () => {
 
         const rect = mascotBodyRef.current.getBoundingClientRect();
 
-        // Coordinates for canvas-confetti are 0-1 relative to viewport
         const originX = (rect.left + rect.width / 2) / window.innerWidth;
         const originY = (rect.top + rect.height / 2) / window.innerHeight;
 
@@ -180,8 +162,14 @@ const Mascot = () => {
         });
     };
 
+    const sizeClass = {
+        sm: 'mascot-size-sm',
+        md: 'mascot-size-md',
+        lg: 'mascot-size-lg',
+    }[size];
+
     return (
-        <div className="mascot-wrapper">
+        <div className={`mascot-wrapper ${sizeClass}`}>
             <div
                 className="mascot-container"
                 onClick={triggerJump}
