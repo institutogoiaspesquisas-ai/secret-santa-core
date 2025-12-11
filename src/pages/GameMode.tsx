@@ -22,6 +22,7 @@ interface GroupMember {
     user_profiles: {
         id: string;
         full_name: string | null;
+        avatar_url?: string | null;
     } | null;
 }
 
@@ -108,19 +109,34 @@ export default function GameMode() {
         fetchStatus();
 
         const fetchMembers = async () => {
-            profilesData?.map(p => [p.id, p]) || []
+            const { data: membersData } = await supabase
+                .from('group_members')
+                .select('id, user_id')
+                .eq('group_id', groupId)
+                .eq('status', 'approved');
+
+            if (!membersData) return;
+
+            const userIds = membersData.map(m => m.user_id);
+            const { data: profilesData } = await supabase
+                .from('user_profiles')
+                .select('id, full_name, avatar_url')
+                .in('id', userIds);
+
+            const profilesMap = new Map(
+                profilesData?.map(p => [p.id, p]) || []
             );
 
-    const joinedMembers = membersData.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        user_profiles: profilesMap.get(member.user_id) || null
-    }));
+            const joinedMembers = membersData.map(member => ({
+                id: member.id,
+                user_id: member.user_id,
+                user_profiles: profilesMap.get(member.user_id) || null
+            }));
 
-    setMembers(joinedMembers);
-};
+            setMembers(joinedMembers);
+        };
 
-fetchMembers();
+        fetchMembers();
     }, [isOwner, groupId, fetchStatus]);
 
 useEffect(() => {
@@ -445,13 +461,13 @@ return (
                                                 <SelectValue placeholder="Selecione um jogador..." />
                                             </SelectTrigger>
                                             <SelectContent className="bg-[#1E1E1E] border-[#FFD166]/30">
-                                                {availablePlayers.map((member) => (
+                                            {availablePlayers.map((player) => (
                                                     <SelectItem
-                                                        key={member.user_id}
-                                                        value={member.user_id}
+                                                        key={player.id}
+                                                        value={player.id}
                                                         className="text-white hover:bg-white/10"
                                                     >
-                                                        {member.user_profiles?.full_name || 'Jogador'}
+                                                        {player.name || 'Jogador'}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

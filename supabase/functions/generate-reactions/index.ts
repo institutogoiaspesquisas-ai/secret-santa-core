@@ -178,8 +178,9 @@ Responda APENAS com um JSON válido no formato:
 
     } catch (error) {
         console.error("Error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
         return new Response(
-            JSON.stringify({ success: false, error: error.message }),
+            JSON.stringify({ success: false, error: errorMessage }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
         );
     }
