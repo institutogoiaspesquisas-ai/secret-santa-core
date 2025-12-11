@@ -1,5 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { User } from '@supabase/supabase-js';
+
+// Helper: Retry getUser() to handle session establishment delays
+const getUserWithRetry = async (maxRetries = 3, delayMs = 1000): Promise<User | null> => {
+    for (let i = 0; i < maxRetries; i++) {
+        console.log(`[GROUPS] Attempting to get user (attempt ${i + 1}/${maxRetries})...`);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+            console.log('[GROUPS] User found:', { userId: user.id });
+            return user;
+        }
+
+        // Wait before retry
+        if (i < maxRetries - 1) {
+            console.log(`[GROUPS] User not found, waiting ${delayMs}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+
+    console.error('[GROUPS] Failed to get user after all retries');
+    return null;
+};
+
+// Helper: Wait for user_profile to be created by trigger
+const waitForUserProfile = async (userId: string, maxRetries = 5, delayMs = 500): Promise<boolean> => {
+    for (let i = 0; i < maxRetries; i++) {
+        console.log(`[GROUPS] Checking if user_profile exists (attempt ${i + 1}/${maxRetries})...`);
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (data && !error) {
+            console.log('[GROUPS] User profile found');
+            return true;
+        }
+
+        if (i < maxRetries - 1) {
+            console.log(`[GROUPS] Profile not found yet, waiting ${delayMs}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+
+    console.error('[GROUPS] User profile not created after all retries');
+    return false;
+};
 
 export interface Group {
     id: string;
@@ -172,18 +220,45 @@ export function useGroups() {
 
     const joinGroup = async (code: string): Promise<{ success: boolean; error?: string }> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Não autenticado');
+            console.log('[GROUPS] Starting joinGroup...', { code });
+
+            // Use retry logic to get user (handles session timing issues)
+            const user = await getUserWithRetry();
+
+            if (!user) {
+                return {
+                    success: false,
+                    error: 'Sessão expirada ou não encontrada. Por favor, faça logout e login novamente.'
+                };
+            }
+
+            // Wait for user_profile to be created by trigger
+            const profileExists = await waitForUserProfile(user.id);
+            if (!profileExists) {
+                return {
+                    success: false,
+                    error: 'Seu perfil ainda está sendo criado. Aguarde alguns segundos e tente novamente.'
+                };
+            }
+
+            console.log('[GROUPS] Checking if group exists...', { code });
 
             // Verificar se o grupo existe (via RPC para bypass RLS)
             const { data: group, error: groupError } = await supabase
                 .rpc('get_group_by_code', { code_input: code })
                 .maybeSingle();
 
-            if (groupError) throw groupError;
+            if (groupError) {
+                console.error('[GROUPS] Error fetching group:', groupError);
+                throw groupError;
+            }
+
             if (!group) {
+                console.log('[GROUPS] Group not found');
                 return { success: false, error: 'Grupo não encontrado. Verifique o código.' };
             }
+
+            console.log('[GROUPS] Group found:', { groupId: group.id });
 
             // Verificar se já é membro
             const { data: existingMember } = await supabase
@@ -194,6 +269,8 @@ export function useGroups() {
                 .maybeSingle();
 
             if (existingMember) {
+                console.log('[GROUPS] User is already a member:', { status: existingMember.status });
+
                 if (existingMember.status === 'pending') {
                     return { success: false, error: 'Você já tem uma solicitação pendente para este grupo.' };
                 }
@@ -202,6 +279,7 @@ export function useGroups() {
                 }
                 if (existingMember.status === 'rejected') {
                     // Permitir reenviar solicitação
+                    console.log('[GROUPS] Re-submitting rejected request');
                     await supabase
                         .from('group_members')
                         .update({ status: 'pending' })
@@ -211,6 +289,8 @@ export function useGroups() {
                     return { success: true };
                 }
             }
+
+            console.log('[GROUPS] Creating membership request...');
 
             // Criar solicitação pendente
             const { error: memberError } = await supabase
@@ -222,12 +302,16 @@ export function useGroups() {
                     status: 'pending',
                 });
 
-            if (memberError) throw memberError;
+            if (memberError) {
+                console.error('[GROUPS] Error creating membership:', memberError);
+                throw memberError;
+            }
 
+            console.log('[GROUPS] Membership request created successfully');
             await fetchGroups();
             return { success: true };
         } catch (err) {
-            console.error('Error joining group:', err);
+            console.error('[GROUPS] Error in joinGroup:', err);
             return { success: false, error: err instanceof Error ? err.message : 'Erro ao entrar no grupo' };
         }
     };
